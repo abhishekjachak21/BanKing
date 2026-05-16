@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 @Repository
 public class TransactionRepository {
@@ -86,6 +87,38 @@ public class TransactionRepository {
                 }
             }
         }
+
+
+
+    public String getEmailByAccountNumber(String accountNumber) {
+
+        String email = null;
+
+        try (
+                Connection connection = DBConnectionUtil.getConnection()
+        ) {
+
+            String query =
+                    "SELECT email FROM account " +
+                            "WHERE account_number = ?";
+
+            PreparedStatement stmt =
+                    connection.prepareStatement(query);
+
+            stmt.setString(1, accountNumber);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                email = rs.getString("email");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return email;
+    }
 
 }
 
