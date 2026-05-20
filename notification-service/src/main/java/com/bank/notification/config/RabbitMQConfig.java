@@ -31,9 +31,7 @@ public class RabbitMQConfig {
                         connectionFactory
                 );
 
-        rabbitTemplate.setMessageConverter(
-                messageConverter
-        );
+        rabbitTemplate.setMessageConverter(messageConverter);
 
         return rabbitTemplate;
     }

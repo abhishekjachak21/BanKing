@@ -15,3 +15,5 @@ public class DepositRequest {
     private Double amount;
 
 }
+
+//IFSC no
