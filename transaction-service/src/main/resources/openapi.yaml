@@ -1,0 +1,158 @@
+openapi: 3.0.1
+
+info:
+  title: Transaction API
+  version: 1.0
+
+paths:
+
+  /api/transactions/deposit:
+
+    post:
+
+      tags:
+        - Transaction
+
+      operationId: depositAmount
+
+      summary: Deposit money into account
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+
+            schema:
+              $ref: '#/components/schemas/DepositRequest'
+
+      responses:
+
+        '200':
+          description: Deposit successful
+
+          content:
+            application/json:
+
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+
+        '400':
+          description: Invalid request
+  /api/transactions/withdraw:
+
+    post:
+
+      tags:
+        - Transaction
+
+      operationId: withdrawAmount
+
+      summary: Withdraw money from account
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+
+            schema:
+              $ref: '#/components/schemas/WithdrawRequest'
+
+      responses:
+
+        '200':
+          description: Withdrawal successful
+
+          content:
+            application/json:
+
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+
+components:
+
+  schemas:
+
+    DepositRequest:
+
+      type: object
+
+      required:
+        - accountNumber
+        - ifscCode
+        - amount
+
+      properties:
+
+        accountNumber:
+          type: string
+          example: ACC1001
+          minLength: 5
+          maxLength: 20
+
+        ifscCode:
+          type: string
+          minLength: 5
+
+          example: SBIN0001234
+
+        amount:
+          type: number
+          format: double
+          minimum: 1
+
+          example: 5000
+
+    WithdrawRequest:
+
+      type: object
+
+      required:
+        - accountNumber
+        - ifscCode
+        - amount
+
+      properties:
+
+        accountNumber:
+          type: string
+          minLength: 5
+          maxLength: 20
+
+          example: ACC1001
+
+        ifscCode:
+          type: string
+          minLength: 5
+
+          example: SBIN0001234
+
+        amount:
+          type: number
+          format: double
+          minimum: 1
+
+          example: 1000
+
+    TransactionResponse:
+
+      type: object
+
+      properties:
+
+        message:
+          type: string
+
+          example: Amount deposited successfully
+
+        accountNumber:
+          type: string
+
+          example: ACC1001
+
+        updatedBalance:
+          type: number
+          format: double
+
+          example: 15000

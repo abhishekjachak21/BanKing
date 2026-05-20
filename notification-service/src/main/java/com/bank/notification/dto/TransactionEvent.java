@@ -1,19 +1,19 @@
-package com.bank.transaction.dto;
+package com.bank.notification.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class NotificationMessage implements Serializable {
+public class TransactionEvent {
+
+    private String accountNumber;
 
     private String email;
 
-    private String accountNumber;
+    private String transactionType;
 
     private Double amount;
 }

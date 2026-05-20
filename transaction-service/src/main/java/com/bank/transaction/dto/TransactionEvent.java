@@ -5,15 +5,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-public class DepositRequest {
+public class TransactionEvent {
 
     private String accountNumber;
+
+    private String email;
+
+    private String transactionType;
 
     private Double amount;
 
 }
-
-//IFSC no
