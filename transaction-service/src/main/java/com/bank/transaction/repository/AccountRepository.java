@@ -22,27 +22,17 @@ public class AccountRepository {
             WHERE account_number = ?
             """;
 
-        try (
-                PreparedStatement preparedStatement =
-                        connection.prepareStatement(sql)
-        ) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            preparedStatement.setString(
-                    1,
-                    accountNumber
-            );
+            preparedStatement.setString(1, accountNumber);
 
-            ResultSet resultSet =
-                    preparedStatement.executeQuery();
+            ResultSet resultSet = preparedStatement.executeQuery();
 
             if (resultSet.next()) {
 
-                Account account =
-                        new Account();
+                Account account = new Account();
 
-                account.setId(
-                        resultSet.getLong("id")
-                );
+                account.setId(resultSet.getLong("id"));
 
                 account.setAccountNumber(
                         resultSet.getString(

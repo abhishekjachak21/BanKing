@@ -16,23 +16,14 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TransactionConsumer {
 
-    private final EmailService
-            emailService;
+    private final EmailService emailService;
 
-    @RabbitListener(
-            queues = "transaction.queue"
-    )
-    public void consumeTransaction(
-            TransactionEvent event
-    ) {
+    @RabbitListener(queues = "transaction.queue")
+    public void consumeTransaction(TransactionEvent event) {
 
-        log.info(
-                "Received transaction event: {}",
-                event
-        );
+        log.info("Received transaction event: {}", event);
 
-        String subject =
-                "Transaction Successful";
+        String subject = "Transaction Successful";
 
         String body = """
                 Dear Customer,

@@ -20,8 +20,7 @@ public class EmailService {
             String body
     ) {
 
-        SimpleMailMessage message =
-                new SimpleMailMessage();
+        SimpleMailMessage message = new SimpleMailMessage();
 
         message.setTo(to);
 

@@ -13,12 +13,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RabbitMQProducer {
 
-    private final RabbitTemplate
-            rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
-    public void sendTransactionEvent(
-            TransactionEvent event
-    ) {
+    public void sendTransactionEvent(TransactionEvent event) {
 
         rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EXCHANGE,

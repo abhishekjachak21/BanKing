@@ -31,8 +31,7 @@ public class TransactionService {
 
         try {
 
-            connection =
-                    DBConnectionUtil.getConnection();
+            connection = DBConnectionUtil.getConnection();
 
             connection.setAutoCommit(false);
 
@@ -49,9 +48,7 @@ public class TransactionService {
                 );
             }
 
-            Double updatedBalance =
-                    account.getBalance()
-                            + request.getAmount();
+            Double updatedBalance = account.getBalance() + request.getAmount();
 
             accountRepository.updateBalance(
                     connection,
@@ -76,23 +73,15 @@ public class TransactionService {
                             request.getAmount()
                     );
 
-            rabbitMQProducer
-                    .sendTransactionEvent(event);
+            rabbitMQProducer.sendTransactionEvent(event);
 
-            TransactionResponse response =
-                    new TransactionResponse();
+            TransactionResponse response = new TransactionResponse();
 
-            response.setMessage(
-                    "Amount deposited successfully"
-            );
+            response.setMessage("Amount deposited successfully");
 
-            response.setAccountNumber(
-                    request.getAccountNumber()
-            );
+            response.setAccountNumber(request.getAccountNumber());
 
-            response.setUpdatedBalance(
-                    updatedBalance
-            );
+            response.setUpdatedBalance(updatedBalance);
 
             return response;
 
@@ -126,16 +115,13 @@ public class TransactionService {
         }
     }
 
-    public TransactionResponse withdraw(
-            WithdrawRequest request
-    ) {
+    public TransactionResponse withdraw(WithdrawRequest request) {
 
         Connection connection = null;
 
         try {
 
-            connection =
-                    DBConnectionUtil.getConnection();
+            connection = DBConnectionUtil.getConnection();
 
             connection.setAutoCommit(false);
 
@@ -153,19 +139,14 @@ public class TransactionService {
                 );
             }
 
-            if (
-                    account.getBalance()
-                            < request.getAmount()
-            ) {
+            if (account.getBalance() < request.getAmount()) {
 
                 throw new InsufficientBalanceException(
                         "Insufficient balance"
                 );
             }
 
-            Double updatedBalance =
-                    account.getBalance()
-                            - request.getAmount();
+            Double updatedBalance = account.getBalance() - request.getAmount();
 
             accountRepository.updateBalance(
                     connection,
@@ -190,23 +171,15 @@ public class TransactionService {
                             request.getAmount()
                     );
 
-            rabbitMQProducer
-                    .sendTransactionEvent(event);
+            rabbitMQProducer.sendTransactionEvent(event);
 
-            TransactionResponse response =
-                    new TransactionResponse();
+            TransactionResponse response = new TransactionResponse();
 
-            response.setMessage(
-                    "Amount withdrawn successfully"
-            );
+            response.setMessage("Amount withdrawn successfully");
 
-            response.setAccountNumber(
-                    request.getAccountNumber()
-            );
+            response.setAccountNumber(request.getAccountNumber());
 
-            response.setUpdatedBalance(
-                    updatedBalance
-            );
+            response.setUpdatedBalance(updatedBalance);
 
             return response;
 

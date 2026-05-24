@@ -19,9 +19,7 @@ public class TransactionController implements TransactionApi {
     private final TransactionService transactionService ;
 
     @Override
-    public ResponseEntity<TransactionResponse> depositAmount(
-         @Valid @RequestBody DepositRequest depositRequest
-    ) {
+    public ResponseEntity<TransactionResponse> depositAmount( @Valid @RequestBody DepositRequest depositRequest) {
 
         TransactionResponse response =
                 transactionService.deposit(
@@ -33,9 +31,7 @@ public class TransactionController implements TransactionApi {
 
 
     @Override
-    public ResponseEntity<TransactionResponse>
-    withdrawAmount(
-
+    public ResponseEntity<TransactionResponse> withdrawAmount(
             @Valid
             @RequestBody
             WithdrawRequest withdrawRequest
