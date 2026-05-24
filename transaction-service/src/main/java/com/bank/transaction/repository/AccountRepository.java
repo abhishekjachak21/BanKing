@@ -22,6 +22,7 @@ public class AccountRepository {
             WHERE account_number = ?
             """;
 
+
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setString(1, accountNumber);
