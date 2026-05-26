@@ -1,54 +1,60 @@
 package com.bank.transaction.service;
 
-import com.bank.transaction.dto.WithdrawRequest;
+import com.bank.transaction.dto.*;
 import com.bank.transaction.entity.Account;
-import com.bank.transaction.dto.DepositRequest;
-import com.bank.transaction.dto.TransactionResponse;
 import com.bank.transaction.exception.AccountNotFoundException;
 import com.bank.transaction.exception.InsufficientBalanceException;
 import com.bank.transaction.producer.RabbitMQProducer;
 import com.bank.transaction.repository.AccountRepository;
 import com.bank.transaction.util.DBConnectionUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import com.bank.transaction.dto.TransactionEvent;
 
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
-
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
-    private final AccountRepository accountRepository ;
+    private final AccountRepository accountRepository;
 
     private final RabbitMQProducer rabbitMQProducer;
 
-    public TransactionResponse deposit(DepositRequest request) {
+    // =========================================
+    // DEPOSIT
+    // =========================================
+
+    public TransactionResponse deposit(
+            DepositRequest request
+    ) {
 
         Connection connection = null;
 
         try {
 
-            connection = DBConnectionUtil.getConnection();
+            connection =
+                    DBConnectionUtil.getConnection();
 
             connection.setAutoCommit(false);
 
             Account account =
-                    accountRepository
-                            .findByAccountNumber(
-                                    connection,
-                                    request.getAccountNumber()
-                            );
+                    accountRepository.findByAccountNumber(
+                            connection,
+                            request.getAccountNumber()
+                    );
 
             if (account == null) {
+
                 throw new AccountNotFoundException(
                         "Account not found"
                 );
             }
 
-            Double updatedBalance = account.getBalance() + request.getAmount();
+            Double updatedBalance =
+                    account.getBalance()
+                            + request.getAmount();
 
             accountRepository.updateBalance(
                     connection,
@@ -73,29 +79,29 @@ public class TransactionService {
                             request.getAmount()
                     );
 
-            rabbitMQProducer.sendTransactionEvent(event);
+            rabbitMQProducer
+                    .sendTransactionEvent(event);
 
-            TransactionResponse response = new TransactionResponse();
+            TransactionResponse response =
+                    new TransactionResponse();
 
-            response.setMessage("Amount deposited successfully");
+            response.setMessage(
+                    "Amount deposited successfully"
+            );
 
-            response.setAccountNumber(request.getAccountNumber());
+            response.setAccountNumber(
+                    request.getAccountNumber()
+            );
 
-            response.setUpdatedBalance(updatedBalance);
+            response.setUpdatedBalance(
+                    updatedBalance
+            );
 
             return response;
 
         } catch (Exception exception) {
 
-            try {
-
-                if (connection != null) {
-                    connection.rollback();
-                }
-
-            } catch (Exception rollbackException) {
-                rollbackException.printStackTrace();
-            }
+            rollbackConnection(connection);
 
             throw new RuntimeException(
                     exception.getMessage()
@@ -103,34 +109,32 @@ public class TransactionService {
 
         } finally {
 
-            try {
-
-                if (connection != null) {
-                    connection.close();
-                }
-
-            } catch (Exception exception) {
-                exception.printStackTrace();
-            }
+            closeConnection(connection);
         }
     }
 
-    public TransactionResponse withdraw(WithdrawRequest request) {
+    // =========================================
+    // WITHDRAW
+    // =========================================
+
+    public TransactionResponse withdraw(
+            WithdrawRequest request
+    ) {
 
         Connection connection = null;
 
         try {
 
-            connection = DBConnectionUtil.getConnection();
+            connection =
+                    DBConnectionUtil.getConnection();
 
             connection.setAutoCommit(false);
 
             Account account =
-                    accountRepository
-                            .findByAccountNumber(
-                                    connection,
-                                    request.getAccountNumber()
-                            );
+                    accountRepository.findByAccountNumber(
+                            connection,
+                            request.getAccountNumber()
+                    );
 
             if (account == null) {
 
@@ -139,14 +143,19 @@ public class TransactionService {
                 );
             }
 
-            if (account.getBalance() < request.getAmount()) {
+            if (
+                    account.getBalance()
+                            < request.getAmount()
+            ) {
 
                 throw new InsufficientBalanceException(
                         "Insufficient balance"
                 );
             }
 
-            Double updatedBalance = account.getBalance() - request.getAmount();
+            Double updatedBalance =
+                    account.getBalance()
+                            - request.getAmount();
 
             accountRepository.updateBalance(
                     connection,
@@ -171,29 +180,29 @@ public class TransactionService {
                             request.getAmount()
                     );
 
-            rabbitMQProducer.sendTransactionEvent(event);
+            rabbitMQProducer
+                    .sendTransactionEvent(event);
 
-            TransactionResponse response = new TransactionResponse();
+            TransactionResponse response =
+                    new TransactionResponse();
 
-            response.setMessage("Amount withdrawn successfully");
+            response.setMessage(
+                    "Amount withdrawn successfully"
+            );
 
-            response.setAccountNumber(request.getAccountNumber());
+            response.setAccountNumber(
+                    request.getAccountNumber()
+            );
 
-            response.setUpdatedBalance(updatedBalance);
+            response.setUpdatedBalance(
+                    updatedBalance
+            );
 
             return response;
 
         } catch (Exception exception) {
 
-            try {
-
-                if (connection != null) {
-                    connection.rollback();
-                }
-
-            } catch (Exception rollbackException) {
-                rollbackException.printStackTrace();
-            }
+            rollbackConnection(connection);
 
             throw new RuntimeException(
                     exception.getMessage()
@@ -201,15 +210,183 @@ public class TransactionService {
 
         } finally {
 
-            try {
+            closeConnection(connection);
+        }
+    }
 
-                if (connection != null) {
-                    connection.close();
-                }
+    // =========================================
+    // SCENARIO 1
+    // TAKES INPUT RETURNS NOTHING
+    // =========================================
 
-            } catch (Exception exception) {
-                exception.printStackTrace();
+    public String updateCustomerKyc(
+            UpdateKycRequest request
+    ) {
+
+        Connection connection = null;
+
+        try {
+
+            connection =
+                    DBConnectionUtil.getConnection();
+
+            accountRepository.updateCustomerKyc(
+                    connection,
+                    Math.toIntExact(
+                            request.getCustomerId()
+                    ),
+                    request.getMobile(),
+                    request.getEmail()
+            );
+
+            return "KYC Updated Successfully";
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    exception.getMessage()
+            );
+
+        } finally {
+
+            closeConnection(connection);
+        }
+    }
+
+    // =========================================
+    // SCENARIO 2
+    // TAKES INPUT RETURNS OUTPUT
+    // =========================================
+
+    public FundTransferResponse fundTransfer(
+            FundTransferRequest request
+    ) {
+
+        Connection connection = null;
+
+        try {
+
+            connection =
+                    DBConnectionUtil.getConnection();
+
+            return accountRepository.fundTransfer(
+                    connection,
+                    request.getFromAccount(),
+                    request.getToAccount(),
+                    request.getAmount()
+            );
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    exception.getMessage()
+            );
+
+        } finally {
+
+            closeConnection(connection);
+        }
+    }
+
+    // =========================================
+    // SCENARIO 3
+    // NO INPUT RETURNS NOTHING
+    // =========================================
+
+    public String processDailyInterest() {
+
+        Connection connection = null;
+
+        try {
+
+            connection =
+                    DBConnectionUtil.getConnection();
+
+            accountRepository.processDailyInterest(
+                    connection
+            );
+
+            return "Daily interest processed successfully";
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    exception.getMessage()
+            );
+
+        } finally {
+
+            closeConnection(connection);
+        }
+    }
+
+    // =========================================
+    // SCENARIO 4
+    // NO INPUT RETURNS OUTPUT
+    // =========================================
+
+    public DailyTransactionReportResponse
+    getDailyTransactionReport() {
+
+        Connection connection = null;
+
+        try {
+
+            connection =
+                    DBConnectionUtil.getConnection();
+
+            return accountRepository
+                    .getDailyTransactionReport(
+                            connection
+                    );
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    exception.getMessage()
+            );
+
+        } finally {
+
+            closeConnection(connection);
+        }
+    }
+
+    // =========================================
+    // COMMON METHODS
+    // =========================================
+
+    private void rollbackConnection(
+            Connection connection
+    ) {
+
+        try {
+
+            if (connection != null) {
+
+                connection.rollback();
             }
+
+        } catch (Exception exception) {
+
+            exception.printStackTrace();
+        }
+    }
+
+    private void closeConnection(
+            Connection connection
+    ) {
+
+        try {
+
+            if (connection != null) {
+
+                connection.close();
+            }
+
+        } catch (Exception exception) {
+
+            exception.printStackTrace();
         }
     }
 }
