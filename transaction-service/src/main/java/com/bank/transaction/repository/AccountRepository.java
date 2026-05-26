@@ -3,10 +3,10 @@ package com.bank.transaction.repository;
 import com.bank.transaction.entity.Account;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
 
 @Repository
 public class AccountRepository {
@@ -16,18 +16,18 @@ public class AccountRepository {
             String accountNumber
     ) {
 
-        String sql = """
-            SELECT *
-            FROM account
-            WHERE account_number = ?
-            """;
+        try (CallableStatement callableStatement =
+                        connection.prepareCall(
+                                "{ call find_account(?) }"
+                        )
+        ) {
 
+            callableStatement.setString(
+                    1,
+                    accountNumber
+            );
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            preparedStatement.setString(1, accountNumber);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
+            ResultSet resultSet = callableStatement.executeQuery();
 
             if (resultSet.next()) {
 
@@ -48,7 +48,9 @@ public class AccountRepository {
                 );
 
                 account.setEmail(
-                        resultSet.getString("email")
+                        resultSet.getString(
+                                "email"
+                        )
                 );
 
                 account.setIfscCode(
@@ -80,28 +82,19 @@ public class AccountRepository {
             Double updatedBalance
     ) {
 
-        String sql = """
-            UPDATE account
-            SET balance = ?
-            WHERE account_number = ?
-            """;
-
         try (
-                PreparedStatement preparedStatement =
-                        connection.prepareStatement(sql)
+                CallableStatement callableStatement =
+                        connection.prepareCall("CALL update_balance(?, ?)")
         ) {
 
-            preparedStatement.setDouble(
-                    1,
-                    updatedBalance
-            );
+            callableStatement.setString(1, accountNumber);
 
-            preparedStatement.setString(
+            callableStatement.setBigDecimal(
                     2,
-                    accountNumber
+                    BigDecimal.valueOf(updatedBalance)
             );
 
-            preparedStatement.executeUpdate();
+            callableStatement.execute();
 
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -116,37 +109,20 @@ public class AccountRepository {
             Double amount
     ) {
 
-        String sql = """
-            INSERT INTO transactions
-            (
-                account_number,
-                transaction_type,
-                amount
-            )
-            VALUES (?, ?, ?)
-            """;
-
         try (
-                PreparedStatement preparedStatement =
-                        connection.prepareStatement(sql)
+                CallableStatement callableStatement =
+                        connection.prepareCall("CALL insert_transaction(?, ?, ?)")
         ) {
 
-            preparedStatement.setString(
-                    1,
-                    accountNumber
-            );
+            callableStatement.setString(1, accountNumber);
+            callableStatement.setString(2, transactionType);
 
-            preparedStatement.setString(
-                    2,
-                    transactionType
-            );
-
-            preparedStatement.setDouble(
+            callableStatement.setBigDecimal(
                     3,
-                    amount
+                    BigDecimal.valueOf(amount)
             );
 
-            preparedStatement.executeUpdate();
+            callableStatement.execute();
 
         } catch (Exception exception) {
             exception.printStackTrace();
