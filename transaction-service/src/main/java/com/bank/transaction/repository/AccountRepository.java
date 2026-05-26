@@ -27,7 +27,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "{ call find_account(?) }"
+                                "CALL find_account(?)"
                         )
 
         ) {
@@ -105,7 +105,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "{ call update_balance(?, ?) }"
+                                "CALL update_balance(?, ?)"
                         )
 
         ) {
@@ -145,7 +145,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "{ call insert_transaction(?, ?, ?) }"
+                                "CALL insert_transaction(?, ?, ?)"
                         )
 
         ) {
@@ -193,7 +193,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "{ call update_customer_kyc(?, ?, ?) }"
+                                "CALL update_customer_kyc(?, ?, ?)"
                         )
 
         ) {
@@ -228,6 +228,8 @@ public class AccountRepository {
     // TAKES INPUT RETURNS OUTPUT
     // =========================================
 
+
+
     public FundTransferResponse fundTransfer(
 
             Connection connection,
@@ -241,7 +243,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "{ call fund_transfer(?, ?, ?, ?, ?) }"
+                                "CALL fund_transfer(?, ?, ?, ?, ?)"
                         )
 
         ) {
@@ -256,10 +258,14 @@ public class AccountRepository {
                     toAccount
             );
 
-            callableStatement.setDouble(
+            callableStatement.setBigDecimal(
                     3,
-                    amount
+                    java.math.BigDecimal.valueOf(amount)
             );
+
+            callableStatement.setString(4, "");
+
+            callableStatement.setString(5, "");
 
             callableStatement.registerOutParameter(
                     4,
@@ -292,6 +298,8 @@ public class AccountRepository {
         }
     }
 
+
+
     // =========================================
     // SCENARIO 3
     // NO INPUT RETURNS NOTHING
@@ -305,7 +313,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "{ call process_daily_interest() }"
+                                "CALL process_daily_interest()"
                         )
 
         ) {
@@ -334,7 +342,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "{ call get_daily_transaction_report(?, ?) }"
+                                "CALL get_daily_transaction_report(?, ?)"
                         )
 
         ) {
