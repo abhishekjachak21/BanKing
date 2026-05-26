@@ -39,6 +39,7 @@ paths:
 
         '400':
           description: Invalid request
+
   /api/transactions/withdraw:
 
     post:
@@ -70,6 +71,114 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransactionResponse'
 
+  /api/transactions/kyc/update:
+
+    post:
+
+      tags:
+        - Transaction
+
+      operationId: updateCustomerKyc
+
+      summary: Update customer KYC
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+
+            schema:
+              $ref: '#/components/schemas/UpdateKycRequest'
+
+      responses:
+
+        '200':
+          description: KYC updated successfully
+
+          content:
+            application/json:
+
+              schema:
+                type: string
+                example: KYC updated successfully
+
+  /api/transactions/fund-transfer:
+
+    post:
+
+      tags:
+        - Transaction
+
+      operationId: fundTransfer
+
+      summary: Transfer funds between accounts
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+
+            schema:
+              $ref: '#/components/schemas/FundTransferRequest'
+
+      responses:
+
+        '200':
+          description: Fund transfer successful
+
+          content:
+            application/json:
+
+              schema:
+                $ref: '#/components/schemas/FundTransferResponse'
+
+  /api/transactions/process-interest:
+
+    post:
+
+      tags:
+        - Transaction
+
+      operationId: processDailyInterest
+
+      summary: Process daily interest for all accounts
+
+      responses:
+
+        '200':
+          description: Interest processed successfully
+
+          content:
+            application/json:
+
+              schema:
+                type: string
+                example: Daily interest processed successfully
+
+  /api/transactions/daily-report:
+
+    get:
+
+      tags:
+        - Transaction
+
+      operationId: getDailyTransactionReport
+
+      summary: Get daily transaction report
+
+      responses:
+
+        '200':
+          description: Daily report fetched successfully
+
+          content:
+            application/json:
+
+              schema:
+                $ref: '#/components/schemas/DailyTransactionReportResponse'
+
 components:
 
   schemas:
@@ -94,14 +203,12 @@ components:
         ifscCode:
           type: string
           minLength: 5
-
           example: SBIN0001234
 
         amount:
           type: number
           format: double
           minimum: 1
-
           example: 5000
 
     WithdrawRequest:
@@ -119,20 +226,17 @@ components:
           type: string
           minLength: 5
           maxLength: 20
-
           example: ACC1001
 
         ifscCode:
           type: string
           minLength: 5
-
           example: SBIN0001234
 
         amount:
           type: number
           format: double
           minimum: 1
-
           example: 1000
 
     TransactionResponse:
@@ -143,16 +247,98 @@ components:
 
         message:
           type: string
-
           example: Amount deposited successfully
 
         accountNumber:
           type: string
-
           example: ACC1001
 
         updatedBalance:
           type: number
           format: double
-
           example: 15000
+
+    UpdateKycRequest:
+
+      type: object
+
+      required:
+        - customerId
+        - mobile
+        - email
+
+      properties:
+
+        customerId:
+          type: integer
+          format: int64
+          example: 101
+
+        mobile:
+          type: string
+          example: 9876543210
+
+        email:
+          type: string
+          example: test@gmail.com
+
+
+
+    FundTransferRequest:
+
+      type: object
+
+      required:
+        - fromAccount
+        - toAccount
+        - amount
+
+      properties:
+
+        fromAccount:
+          type: string
+          example: ACC1001
+
+        toAccount:
+          type: string
+          example: ACC2002
+
+        amount:
+          type: number
+          format: double
+          example: 2500
+
+    FundTransferResponse:
+
+      type: object
+
+      properties:
+
+        status:
+          type: string
+          example: SUCCESS
+
+        message:
+          type: string
+          example: Fund transfer successful
+
+        transactionId:
+          type: integer
+          format: int64
+          example: 101
+
+
+    DailyTransactionReportResponse:
+
+      type: object
+
+      properties:
+
+        totalTransactions:
+          type: integer
+          example: 150
+
+        totalDepositAmount:
+          type: number
+          format: double
+          example: 500000

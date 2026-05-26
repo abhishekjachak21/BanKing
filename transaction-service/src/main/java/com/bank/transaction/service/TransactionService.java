@@ -94,7 +94,7 @@ public class TransactionService {
             );
 
             response.setUpdatedBalance(
-                    updatedBalance
+                    Math.round(updatedBalance * 100.0) / 100.0
             );
 
             return response;
@@ -195,7 +195,7 @@ public class TransactionService {
             );
 
             response.setUpdatedBalance(
-                    updatedBalance
+                    Math.round(updatedBalance * 100.0) / 100.0
             );
 
             return response;

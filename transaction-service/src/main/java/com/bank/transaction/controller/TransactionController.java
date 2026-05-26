@@ -1,142 +1,95 @@
 package com.bank.transaction.controller;
 
 import com.bank.transaction.api.TransactionApi;
-import com.bank.transaction.dto.*;
+import com.bank.transaction.dto.DailyTransactionReportResponse;
+import com.bank.transaction.dto.DepositRequest;
+import com.bank.transaction.dto.FundTransferRequest;
+import com.bank.transaction.dto.FundTransferResponse;
+import com.bank.transaction.dto.TransactionResponse;
+import com.bank.transaction.dto.UpdateKycRequest;
+import com.bank.transaction.dto.WithdrawRequest;
 import com.bank.transaction.service.TransactionService;
-
-import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-@RestController
+@Controller
 @RequiredArgsConstructor
 public class TransactionController implements TransactionApi {
 
     private final TransactionService transactionService;
 
-    // =========================
-    // DEPOSIT API
-    // =========================
-
     @Override
     public ResponseEntity<TransactionResponse>
     depositAmount(
-
-            @Valid
-            @RequestBody
             DepositRequest depositRequest
-
     ) {
 
-        TransactionResponse response =
+        return ResponseEntity.ok(
                 transactionService.deposit(
                         depositRequest
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
-
-    // =========================
-    // WITHDRAW API
-    // =========================
 
     @Override
     public ResponseEntity<TransactionResponse>
     withdrawAmount(
-
-            @Valid
-            @RequestBody
             WithdrawRequest withdrawRequest
-
     ) {
 
-        TransactionResponse response =
+        return ResponseEntity.ok(
                 transactionService.withdraw(
                         withdrawRequest
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
 
-    // =========================
-    // SCENARIO 1
-    // TAKES INPUT RETURNS NOTHING
-    // =========================
-
-    @PostMapping("/kyc/update")
+    @Override
     public ResponseEntity<String>
     updateCustomerKyc(
-
-            @RequestBody
-            UpdateKycRequest request
-
+            UpdateKycRequest updateKycRequest
     ) {
 
-        String response =
+        return ResponseEntity.ok(
                 transactionService.updateCustomerKyc(
-                        request
-                );
-
-        return ResponseEntity.ok(response);
+                        updateKycRequest
+                )
+        );
     }
 
-    // =========================
-    // SCENARIO 2
-    // TAKES INPUT RETURNS OUTPUT
-    // =========================
-
-    @PostMapping("/fund-transfer")
+    @Override
     public ResponseEntity<FundTransferResponse>
     fundTransfer(
-
-            @RequestBody
-            FundTransferRequest request
-
+            FundTransferRequest fundTransferRequest
     ) {
 
-        FundTransferResponse response =
+        return ResponseEntity.ok(
                 transactionService.fundTransfer(
-                        request
-                );
-
-        return ResponseEntity.ok(response);
+                        fundTransferRequest
+                )
+        );
     }
 
-    // =========================
-    // SCENARIO 3
-    // NO INPUT RETURNS NOTHING
-    // =========================
-
-    @PostMapping("/process-interest")
+    @Override
     public ResponseEntity<String>
     processDailyInterest() {
 
-        String response =
-                transactionService
-                        .processDailyInterest();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                transactionService.processDailyInterest()
+        );
     }
 
-    // =========================
-    // SCENARIO 4
-    // NO INPUT RETURNS OUTPUT
-    // =========================
-
-    @GetMapping("/daily-report")
+    @Override
     public ResponseEntity<
-            DailyTransactionReportResponse
-            > getDailyTransactionReport() {
+            DailyTransactionReportResponse>
+    getDailyTransactionReport() {
 
-        DailyTransactionReportResponse response = transactionService.getDailyTransactionReport();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                transactionService
+                        .getDailyTransactionReport()
+        );
     }
 }

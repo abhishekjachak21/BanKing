@@ -1,11 +1,11 @@
 package com.bank.transaction.repository;
 
-import com.bank.transaction.dto.DailyTransactionReportResponse;
-import com.bank.transaction.dto.FundTransferResponse;
 import com.bank.transaction.entity.Account;
-
+import com.bank.transaction.dto.FundTransferResponse;
+import com.bank.transaction.dto.DailyTransactionReportResponse;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -18,6 +18,7 @@ public class AccountRepository {
     // FIND ACCOUNT
     // =========================================
 
+
     public Account findByAccountNumber(
             Connection connection,
             String accountNumber
@@ -27,7 +28,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "CALL find_account(?)"
+                                "SELECT * FROM find_account(?)"
                         )
 
         ) {
@@ -115,9 +116,9 @@ public class AccountRepository {
                     accountNumber
             );
 
-            callableStatement.setDouble(
+            callableStatement.setBigDecimal(
                     2,
-                    updatedBalance
+                    BigDecimal.valueOf(updatedBalance)
             );
 
             callableStatement.execute();
@@ -160,9 +161,9 @@ public class AccountRepository {
                     transactionType
             );
 
-            callableStatement.setDouble(
+            callableStatement.setBigDecimal(
                     3,
-                    amount
+                    BigDecimal.valueOf(amount)
             );
 
             callableStatement.execute();
@@ -243,7 +244,7 @@ public class AccountRepository {
 
                 CallableStatement callableStatement =
                         connection.prepareCall(
-                                "CALL fund_transfer(?, ?, ?, ?, ?)"
+                                "CALL fund_transfer(?, ?, ?, ?, ?, ?)"
                         )
 
         ) {
@@ -260,16 +261,12 @@ public class AccountRepository {
 
             callableStatement.setBigDecimal(
                     3,
-                    java.math.BigDecimal.valueOf(amount)
+                    BigDecimal.valueOf(amount)
             );
-
-            callableStatement.setString(4, "");
-
-            callableStatement.setString(5, "");
 
             callableStatement.registerOutParameter(
                     4,
-                    Types.VARCHAR
+                    Types.INTEGER
             );
 
             callableStatement.registerOutParameter(
@@ -277,18 +274,49 @@ public class AccountRepository {
                     Types.VARCHAR
             );
 
+            callableStatement.registerOutParameter(
+                    6,
+                    Types.VARCHAR
+            );
+
+
+            callableStatement.registerOutParameter(
+                    4,
+                    Types.INTEGER
+            );
+
+            callableStatement.registerOutParameter(
+                    5,
+                    Types.VARCHAR
+            );
+
+            callableStatement.registerOutParameter(
+                    6,
+                    Types.VARCHAR
+            );
+
             callableStatement.execute();
 
-            String status =
-                    callableStatement.getString(4);
+            Integer transactionId =
+                    callableStatement.getInt(4);
 
-            String message =
+            String status =
                     callableStatement.getString(5);
 
-            return new FundTransferResponse(
-                    status,
-                    message
-            );
+            String message =
+                    callableStatement.getString(6);
+
+
+            FundTransferResponse response = new FundTransferResponse();
+
+            response.setTransactionId(Long.valueOf(transactionId));
+
+            response.setStatus(status);
+
+            response.setMessage(message);
+
+            return response;
+
 
         } catch (Exception exception) {
 
@@ -362,13 +390,19 @@ public class AccountRepository {
             Integer totalTransactions =
                     callableStatement.getInt(1);
 
-            Double totalAmount =
-                    callableStatement.getDouble(2);
+            BigDecimal totalAmount =
+                    callableStatement.getBigDecimal(2);
 
-            return new DailyTransactionReportResponse(
-                    totalTransactions,
-                    totalAmount
+            DailyTransactionReportResponse response =
+                    new DailyTransactionReportResponse();
+
+            response.setTotalTransactions(totalTransactions);
+
+            response.setTotalDepositAmount(
+                    totalAmount.doubleValue()
             );
+
+            return response;
 
         } catch (Exception exception) {
 
