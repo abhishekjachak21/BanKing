@@ -1,9 +1,6 @@
 package com.bank.transaction.config;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -12,6 +9,16 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
+
+    public static final String DLQ =
+            "transaction.dlq";
+
+    public static final String DLX =
+            "transaction.dlx";
+
+    public static final String DLQ_ROUTING_KEY =
+            "transaction.dlq.routingKey";
+
 
     public static final String
             QUEUE = "transaction.queue";
@@ -24,12 +31,34 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue queue() {
-        return new Queue(QUEUE);
+
+        return QueueBuilder.durable(QUEUE)
+                .withArgument(
+                        "x-dead-letter-exchange",
+                        DLX
+                )
+                .withArgument(
+                        "x-dead-letter-routing-key",
+                        DLQ_ROUTING_KEY
+                )
+                .build();
     }
+
+    @Bean
+    public Queue deadLetterQueue() {
+        return new Queue(DLQ);
+    }
+
+
 
     @Bean
     public DirectExchange exchange() {
         return new DirectExchange(EXCHANGE);
+    }
+
+    @Bean
+    public DirectExchange deadLetterExchange() {
+        return new DirectExchange(DLX);
     }
 
     @Bean
@@ -42,6 +71,18 @@ public class RabbitMQConfig {
                 .bind(queue)
                 .to(exchange)
                 .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding dlqBinding(
+            Queue deadLetterQueue,
+            DirectExchange deadLetterExchange
+    ) {
+
+        return BindingBuilder
+                .bind(deadLetterQueue)
+                .to(deadLetterExchange)
+                .with(DLQ_ROUTING_KEY);
     }
 
     @Bean

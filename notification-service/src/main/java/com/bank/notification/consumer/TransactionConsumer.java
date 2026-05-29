@@ -23,30 +23,53 @@ public class TransactionConsumer {
 
         log.info("Received transaction event: {}", event);
 
-        String subject = "Transaction Successful";
+        try {
+            String subject = "Transaction Successful";
 
-        String body = """
-                Dear Customer,
+            String body = """
+                    Dear Customer,
+                    
+                    Your transaction was successful.
+                    
+                    Account Number: %s
+                    Transaction Type: %s
+                    Amount: %s
+                    
+                    Thank You.
+                    """
+                    .formatted(
+                            event.getAccountNumber(),
+                            event.getTransactionType(),
+                            event.getAmount()
+                    );
 
-                Your transaction was successful.
+//            if(true){
+//                throw new RuntimeException(
+//                        "Testing DLQ"
+//                );
+//            }
 
-                Account Number: %s
-                Transaction Type: %s
-                Amount: %s
+            emailService.sendEmail(
+                    event.getEmail(),
+                    subject,
+                    body
+            );
 
-                Thank You.
-                """
-                .formatted(
-                        event.getAccountNumber(),
-                        event.getTransactionType(),
-                        event.getAmount()
-                );
+        } catch (Exception ex) {
 
-        emailService.sendEmail(
-                event.getEmail(),
-                subject,
-                body
-        );
+            log.error(
+                    "Email failed for {}",
+                    event.getEmail()
+            );
+
+            throw new RuntimeException(ex);
+
+        }
+        if (event.getEmail().contains("fail")) {
+            throw new RuntimeException(
+                    "Email sending failed"
+            );
+        }
 
         log.info(
                 "Email sent to: {}",
