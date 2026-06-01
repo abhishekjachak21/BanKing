@@ -1,6 +1,8 @@
 package com.bank.notification.consumer;
 
+import com.bank.notification.dto.NotificationResponseEvent;
 import com.bank.notification.dto.TransactionEvent;
+import com.bank.notification.producer.NotificationResponseProducer;
 import com.bank.notification.service.EmailService;
 
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,9 @@ import org.springframework.stereotype.Component;
 public class TransactionConsumer {
 
     private final EmailService emailService;
+
+    private final NotificationResponseProducer responseProducer;
+
 
     @RabbitListener(queues = "transaction.queue")
     public void consumeTransaction(TransactionEvent event) {
@@ -55,7 +60,31 @@ public class TransactionConsumer {
                     body
             );
 
+            NotificationResponseEvent response =
+                    new NotificationResponseEvent(
+                            event.getAccountNumber(),
+                            event.getEmail(),
+                            "SUCCESS",
+                            "Email Sent Successfully"
+                    );
+
+            responseProducer.publishResponse(
+                    response
+            );
+
         } catch (Exception ex) {
+
+            NotificationResponseEvent response =
+                    new NotificationResponseEvent(
+                            event.getAccountNumber(),
+                            event.getEmail(),
+                            "FAILED",
+                            ex.getMessage()
+                    );
+
+            responseProducer.publishResponse(
+                    response
+            );
 
             log.error(
                     "Email failed for {}",

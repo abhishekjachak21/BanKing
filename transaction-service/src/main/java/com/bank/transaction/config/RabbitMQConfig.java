@@ -10,24 +10,34 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String DLQ =
-            "transaction.dlq";
+    public static final String DLQ = "transaction.dlq";
 
-    public static final String DLX =
-            "transaction.dlx";
+    public static final String DLX = "transaction.dlx";
 
-    public static final String DLQ_ROUTING_KEY =
-            "transaction.dlq.routingKey";
+    public static final String DLQ_ROUTING_KEY = "transaction.dlq.routingKey";
+
+    public static final String QUEUE = "transaction.queue";
+
+    public static final String DAILY_INTEREST_QUEUE = "daily.interest.queue";
+
+    public static final String DAILY_INTEREST_ROUTING_KEY = "daily.interest.routingKey";
+
+    public static final String EXCHANGE = "transaction.exchange";
+
+    public static final String ROUTING_KEY = "transaction.routingKey";
+
+    public static final String RESPONSE_QUEUE = "notification.response.queue";
+
+    public static final String RESPONSE_ROUTING_KEY = "notification.response.routingKey";
 
 
-    public static final String
-            QUEUE = "transaction.queue";
+    @Bean
+    public Queue responseQueue() {
 
-    public static final String
-            EXCHANGE = "transaction.exchange";
-
-    public static final String
-            ROUTING_KEY = "transaction.routingKey";
+        return QueueBuilder
+                .durable(RESPONSE_QUEUE)
+                .build();
+    }
 
     @Bean
     public Queue queue() {
@@ -41,6 +51,14 @@ public class RabbitMQConfig {
                         "x-dead-letter-routing-key",
                         DLQ_ROUTING_KEY
                 )
+                .build();
+    }
+
+    @Bean
+    public Queue dailyInterestQueue() {
+
+        return QueueBuilder
+                .durable(DAILY_INTEREST_QUEUE)
                 .build();
     }
 
@@ -73,6 +91,18 @@ public class RabbitMQConfig {
                 .with(ROUTING_KEY);
     }
 
+
+    @Bean
+    public Binding responseBinding(
+            DirectExchange exchange
+    ) {
+
+        return BindingBuilder
+                .bind(responseQueue())
+                .to(exchange)
+                .with(RESPONSE_ROUTING_KEY);
+    }
+
     @Bean
     public Binding dlqBinding(
             Queue deadLetterQueue,
@@ -83,6 +113,21 @@ public class RabbitMQConfig {
                 .bind(deadLetterQueue)
                 .to(deadLetterExchange)
                 .with(DLQ_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding dailyInterestBinding(
+            DirectExchange exchange
+    ) {
+
+        return BindingBuilder
+                .bind(
+                        dailyInterestQueue()
+                )
+                .to(exchange)
+                .with(
+                        DAILY_INTEREST_ROUTING_KEY
+                );
     }
 
     @Bean
