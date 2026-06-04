@@ -22,10 +22,7 @@ public class TransactionController implements TransactionApi {
     private final TransactionService transactionService;
 
     @Override
-    public ResponseEntity<TransactionResponse>
-    depositAmount(
-            DepositRequest depositRequest
-    ) {
+    public ResponseEntity<TransactionResponse> depositAmount(DepositRequest depositRequest) {
 
         return ResponseEntity.ok(
                 transactionService.deposit(

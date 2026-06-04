@@ -16,10 +16,7 @@ public class DailyInterestConsumer {
 
     private final TransactionService transactionService;
 
-    @RabbitListener(
-            queues =
-                    RabbitMQConfig.DAILY_INTEREST_QUEUE
-    )
+    @RabbitListener(queues = RabbitMQConfig.DAILY_INTEREST_QUEUE)
     public void consume() {
 
         log.info(
