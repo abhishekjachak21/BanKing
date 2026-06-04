@@ -39,13 +39,15 @@ public class TransactionConsumer {
                     Account Number: %s
                     Transaction Type: %s
                     Amount: %s
+                    Total Balance: %s
                     
                     Thank You.
                     """
                     .formatted(
                             event.getAccountNumber(),
                             event.getTransactionType(),
-                            event.getAmount()
+                            event.getAmount(),
+                            event.getTotalBalance()
                     );
 
 //            if(true){

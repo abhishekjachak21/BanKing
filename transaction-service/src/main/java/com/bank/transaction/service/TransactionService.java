@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 
 @Service
@@ -26,21 +28,17 @@ public class TransactionService {
     // DEPOSIT
     // =========================================
 
-    public TransactionResponse deposit(
-            DepositRequest request
-    ) {
+    public TransactionResponse deposit(DepositRequest request) {
 
         Connection connection = null;
 
         try {
 
-            connection =
-                    DBConnectionUtil.getConnection();
+            connection = DBConnectionUtil.getConnection();
 
             connection.setAutoCommit(false);
 
-            Account account =
-                    accountRepository.findByAccountNumber(
+            Account account = accountRepository.findByAccountNumber(
                             connection,
                             request.getAccountNumber()
                     );
@@ -52,9 +50,8 @@ public class TransactionService {
                 );
             }
 
-            Double updatedBalance =
-                    account.getBalance()
-                            + request.getAmount();
+            BigDecimal updatedBalance =
+                    account.getBalance().add(new BigDecimal(request.getAmount()));
 
             accountRepository.updateBalance(
                     connection,
@@ -66,36 +63,30 @@ public class TransactionService {
                     connection,
                     request.getAccountNumber(),
                     "DEPOSIT",
-                    request.getAmount()
+                    new BigDecimal(request.getAmount())
             );
 
             connection.commit();
 
-            TransactionEvent event =
-                    new TransactionEvent(
+            TransactionResponse response = new TransactionResponse();
+
+            response.setMessage("Amount deposited successfully");
+
+            response.setAccountNumber(request.getAccountNumber());
+
+            response.setUpdatedBalance(
+                    updatedBalance.setScale(2, RoundingMode.HALF_UP).toString()
+            );
+
+            TransactionEvent event = new TransactionEvent(
                             account.getAccountNumber(),
                             account.getEmail(),
                             "DEPOSIT",
-                            request.getAmount()
+                            new BigDecimal(request.getAmount()),
+                            new BigDecimal(response.getUpdatedBalance())
                     );
 
-            rabbitMQProducer
-                    .sendTransactionEvent(event);
-
-            TransactionResponse response =
-                    new TransactionResponse();
-
-            response.setMessage(
-                    "Amount deposited successfully"
-            );
-
-            response.setAccountNumber(
-                    request.getAccountNumber()
-            );
-
-            response.setUpdatedBalance(
-                    Math.round(updatedBalance * 100.0) / 100.0
-            );
+            rabbitMQProducer.sendTransactionEvent(event);
 
             return response;
 
@@ -117,16 +108,13 @@ public class TransactionService {
     // WITHDRAW
     // =========================================
 
-    public TransactionResponse withdraw(
-            WithdrawRequest request
-    ) {
+    public TransactionResponse withdraw(WithdrawRequest request) {
 
         Connection connection = null;
 
         try {
 
-            connection =
-                    DBConnectionUtil.getConnection();
+            connection = DBConnectionUtil.getConnection();
 
             connection.setAutoCommit(false);
 
@@ -143,19 +131,15 @@ public class TransactionService {
                 );
             }
 
-            if (
-                    account.getBalance()
-                            < request.getAmount()
-            ) {
+            if (account.getBalance().compareTo(new BigDecimal(request.getAmount())) < 0) {
 
                 throw new InsufficientBalanceException(
                         "Insufficient balance"
                 );
             }
 
-            Double updatedBalance =
-                    account.getBalance()
-                            - request.getAmount();
+            BigDecimal updatedBalance =
+                    account.getBalance().subtract(new BigDecimal(request.getAmount()));
 
             accountRepository.updateBalance(
                     connection,
@@ -167,36 +151,33 @@ public class TransactionService {
                     connection,
                     request.getAccountNumber(),
                     "WITHDRAW",
-                    request.getAmount()
+                    new BigDecimal(request.getAmount())
             );
 
             connection.commit();
+
+
+
+            TransactionResponse response = new TransactionResponse();
+
+            response.setMessage("Amount withdrawn successfully");
+
+            response.setAccountNumber(request.getAccountNumber());
+
+            response.setUpdatedBalance(
+                    updatedBalance.setScale(2, RoundingMode.HALF_UP).toString()
+            );
 
             TransactionEvent event =
                     new TransactionEvent(
                             account.getAccountNumber(),
                             account.getEmail(),
                             "WITHDRAW",
-                            request.getAmount()
+                            new BigDecimal(request.getAmount()),
+                            new BigDecimal(response.getUpdatedBalance())
                     );
 
-            rabbitMQProducer
-                    .sendTransactionEvent(event);
-
-            TransactionResponse response =
-                    new TransactionResponse();
-
-            response.setMessage(
-                    "Amount withdrawn successfully"
-            );
-
-            response.setAccountNumber(
-                    request.getAccountNumber()
-            );
-
-            response.setUpdatedBalance(
-                    Math.round(updatedBalance * 100.0) / 100.0
-            );
+            rabbitMQProducer.sendTransactionEvent(event);
 
             return response;
 
@@ -258,22 +239,19 @@ public class TransactionService {
     // TAKES INPUT RETURNS OUTPUT
     // =========================================
 
-    public FundTransferResponse fundTransfer(
-            FundTransferRequest request
-    ) {
+    public FundTransferResponse fundTransfer(FundTransferRequest request) {
 
         Connection connection = null;
 
         try {
 
-            connection =
-                    DBConnectionUtil.getConnection();
+            connection = DBConnectionUtil.getConnection();
 
             return accountRepository.fundTransfer(
                     connection,
                     request.getFromAccount(),
                     request.getToAccount(),
-                    request.getAmount()
+                    new BigDecimal(request.getAmount())
             );
 
         } catch (Exception exception) {
@@ -299,8 +277,7 @@ public class TransactionService {
 
         try {
 
-            connection =
-                    DBConnectionUtil.getConnection();
+            connection = DBConnectionUtil.getConnection();
 
             accountRepository.processDailyInterest(
                     connection

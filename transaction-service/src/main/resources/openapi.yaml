@@ -206,10 +206,8 @@ components:
           example: SBIN0001234
 
         amount:
-          type: number
-          format: double
-          minimum: 1
-          example: 5000
+          type: string
+          example: "786.28"
 
     WithdrawRequest:
 
@@ -234,10 +232,8 @@ components:
           example: SBIN0001234
 
         amount:
-          type: number
-          format: double
-          minimum: 1
-          example: 1000
+          type: string
+          example: "786.28"
 
     TransactionResponse:
 
@@ -254,9 +250,8 @@ components:
           example: ACC1001
 
         updatedBalance:
-          type: number
-          format: double
-          example: 15000
+          type: string
+          example: "15000.24"
 
     UpdateKycRequest:
 
@@ -304,9 +299,8 @@ components:
           example: ACC2002
 
         amount:
-          type: number
-          format: double
-          example: 2500
+          type: string
+          example: "786.28"
 
     FundTransferResponse:
 
@@ -339,6 +333,5 @@ components:
           example: 150
 
         totalDepositAmount:
-          type: number
-          format: double
-          example: 500000
+          type: string
+          example: "786.28"

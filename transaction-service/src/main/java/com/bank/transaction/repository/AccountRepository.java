@@ -6,6 +6,7 @@ import com.bank.transaction.dto.DailyTransactionReportResponse;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -74,7 +75,7 @@ public class AccountRepository {
                 );
 
                 account.setBalance(
-                        resultSet.getDouble(
+                        resultSet.getBigDecimal(
                                 "balance"
                         )
                 );
@@ -99,7 +100,7 @@ public class AccountRepository {
     public void updateBalance(
             Connection connection,
             String accountNumber,
-            Double updatedBalance
+            BigDecimal updatedBalance
     ) {
 
         try (
@@ -118,7 +119,7 @@ public class AccountRepository {
 
             callableStatement.setBigDecimal(
                     2,
-                    BigDecimal.valueOf(updatedBalance)
+                    updatedBalance
             );
 
             callableStatement.execute();
@@ -139,7 +140,7 @@ public class AccountRepository {
             Connection connection,
             String accountNumber,
             String transactionType,
-            Double amount
+            BigDecimal amount
     ) {
 
         try (
@@ -163,7 +164,7 @@ public class AccountRepository {
 
             callableStatement.setBigDecimal(
                     3,
-                    BigDecimal.valueOf(amount)
+                    amount
             );
 
             callableStatement.execute();
@@ -236,7 +237,7 @@ public class AccountRepository {
             Connection connection,
             String fromAccount,
             String toAccount,
-            Double amount
+            BigDecimal amount
 
     ) {
 
@@ -261,7 +262,7 @@ public class AccountRepository {
 
             callableStatement.setBigDecimal(
                     3,
-                    BigDecimal.valueOf(amount)
+                    amount
             );
 
             callableStatement.registerOutParameter(
@@ -399,7 +400,7 @@ public class AccountRepository {
             response.setTotalTransactions(totalTransactions);
 
             response.setTotalDepositAmount(
-                    totalAmount.doubleValue()
+                    totalAmount.setScale(2, RoundingMode.HALF_UP).toString()
             );
 
             return response;
