@@ -333,18 +333,23 @@ components:
 
         customerName:
           type: string
+          minLength: 3
+          maxLength: 100
           example: Abhishek
 
         mobile:
           type: string
+          pattern: '^[0-9]{10}$'
           example: "9876543210"
 
         email:
           type: string
+          format: email
           example: test@gmail.com
 
         panNumber:
           type: string
+          pattern: '^[A-Z]{5}[0-9]{4}[A-Z]{1}$'
           example: ABCDE1234F
 
 
@@ -378,18 +383,22 @@ components:
 
         holderName:
           type: string
+          minLength: 3
+          maxLength: 100
           example: Abhishek Sharma
 
         email:
           type: string
+          format: email
           example: abhi@gmail.com
 
         accountType:
           type: string
-          example: SAVINGS
+          example: "SAVINGS"
 
         initialBalance:
-          type: string
+          type: number
+          format: double
           example: "10000.00"
 
 

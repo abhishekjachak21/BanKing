@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 
     account_type VARCHAR(20)
 
-)
+)@@
 
 
     CREATE TABLE IF NOT EXISTS transactions (
