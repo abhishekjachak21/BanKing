@@ -56,6 +56,12 @@ public class TransactionConsumer {
 //                );
 //            }
 
+            if (event.getEmail().contains("fail")) {
+            throw new RuntimeException(
+                    "Email sending failed"
+            );
+        }
+
             emailService.sendEmail(
                     event.getEmail(),
                     subject,
@@ -96,11 +102,7 @@ public class TransactionConsumer {
             throw new RuntimeException(ex);
 
         }
-        if (event.getEmail().contains("fail")) {
-            throw new RuntimeException(
-                    "Email sending failed"
-            );
-        }
+
 
         log.info(
                 "Email sent to: {}",

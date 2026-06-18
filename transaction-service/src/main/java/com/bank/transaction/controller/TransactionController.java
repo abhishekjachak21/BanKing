@@ -1,14 +1,11 @@
 package com.bank.transaction.controller;
 
 import com.bank.transaction.api.TransactionApi;
-import com.bank.transaction.dto.DailyTransactionReportResponse;
-import com.bank.transaction.dto.DepositRequest;
-import com.bank.transaction.dto.FundTransferRequest;
-import com.bank.transaction.dto.FundTransferResponse;
-import com.bank.transaction.dto.TransactionResponse;
-import com.bank.transaction.dto.UpdateKycRequest;
-import com.bank.transaction.dto.WithdrawRequest;
+import com.bank.transaction.dto.*;
 import com.bank.transaction.service.TransactionService;
+import com.bank.transaction.api.CustomerApi;
+import com.bank.transaction.api.AccountApi;
+
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +14,7 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 @RequiredArgsConstructor
-public class TransactionController implements TransactionApi {
+public class TransactionController implements TransactionApi, CustomerApi, AccountApi {
 
     private final TransactionService transactionService;
 
@@ -41,6 +38,38 @@ public class TransactionController implements TransactionApi {
                 transactionService.withdraw(
                         withdrawRequest
                 )
+        );
+    }
+
+
+    @Override
+    public ResponseEntity<CreateCustomerResponse>
+    createCustomer(
+            CreateCustomerRequest createCustomerRequest
+    ) {
+
+        return ResponseEntity.ok(
+
+                transactionService.createCustomer(
+                        createCustomerRequest
+                )
+
+        );
+    }
+
+
+    @Override
+    public ResponseEntity<CreateAccountResponse>
+    createAccount(
+            CreateAccountRequest createAccountRequest
+    ) {
+
+        return ResponseEntity.ok(
+
+                transactionService.createAccount(
+                        createAccountRequest
+                )
+
         );
     }
 

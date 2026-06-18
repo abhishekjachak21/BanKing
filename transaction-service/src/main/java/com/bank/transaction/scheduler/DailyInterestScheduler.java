@@ -15,12 +15,10 @@ public class DailyInterestScheduler {
 
     private final DailyInterestProducer producer;
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(cron = "0 0 0 * * *")
     public void runDailyInterestJob() {
 
-        log.info(
-                "Publishing Daily Interest Event"
-        );
+        log.info("Publishing Daily Interest Event");
 
         producer.publishDailyInterestJob();
     }

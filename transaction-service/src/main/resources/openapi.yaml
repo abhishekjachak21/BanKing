@@ -179,6 +179,72 @@ paths:
               schema:
                 $ref: '#/components/schemas/DailyTransactionReportResponse'
 
+  /api/customers:
+
+    post:
+
+      tags:
+        - Customer
+
+      operationId: createCustomer
+
+      summary: Create new customer
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+
+      responses:
+
+        '200':
+          description: Customer created successfully
+
+          content:
+            application/json:
+
+              schema:
+                $ref: '#/components/schemas/CreateCustomerResponse'
+
+
+  /api/accounts:
+
+    post:
+
+      tags:
+        - Account
+
+      operationId: createAccount
+
+      summary: Create account
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+
+      responses:
+
+        '200':
+          description: Account created successfully
+
+          content:
+            application/json:
+
+              schema:
+                $ref: '#/components/schemas/CreateAccountResponse'
+
+
+
+
 components:
 
   schemas:
@@ -252,6 +318,99 @@ components:
         updatedBalance:
           type: string
           example: "15000.24"
+
+    CreateCustomerRequest:
+
+      type: object
+
+      required:
+        - customerName
+        - mobile
+        - email
+        - panNumber
+
+      properties:
+
+        customerName:
+          type: string
+          example: Abhishek
+
+        mobile:
+          type: string
+          example: "9876543210"
+
+        email:
+          type: string
+          example: test@gmail.com
+
+        panNumber:
+          type: string
+          example: ABCDE1234F
+
+
+    CreateCustomerResponse:
+
+      type: object
+
+      properties:
+
+        customerId:
+          type: integer
+          format: int64
+          example: 101
+
+        message:
+          type: string
+          example: Customer created successfully
+
+
+    CreateAccountRequest:
+
+      type: object
+
+      required:
+        - holderName
+        - email
+        - accountType
+        - initialBalance
+
+      properties:
+
+        holderName:
+          type: string
+          example: Abhishek Sharma
+
+        email:
+          type: string
+          example: abhi@gmail.com
+
+        accountType:
+          type: string
+          example: SAVINGS
+
+        initialBalance:
+          type: string
+          example: "10000.00"
+
+
+
+    CreateAccountResponse:
+
+      type: object
+
+      properties:
+
+        accountNumber:
+          type: string
+          example: ACC1001
+
+        ifscCode:
+          type: string
+          example: SBIN0001234
+
+        message:
+          type: string
+          example: Account created successfully
 
     UpdateKycRequest:
 

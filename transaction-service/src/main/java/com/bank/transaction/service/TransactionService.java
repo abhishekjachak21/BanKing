@@ -59,6 +59,11 @@ public class TransactionService {
                     updatedBalance
             );
 
+            if(true){
+                throw new RuntimeException("Testing");
+            }
+
+
             accountRepository.insertTransaction(
                     connection,
                     request.getAccountNumber(),
@@ -200,9 +205,7 @@ public class TransactionService {
     // TAKES INPUT RETURNS NOTHING
     // =========================================
 
-    public String updateCustomerKyc(
-            UpdateKycRequest request
-    ) {
+    public String updateCustomerKyc(UpdateKycRequest request) {
 
         Connection connection = null;
 
@@ -328,6 +331,116 @@ public class TransactionService {
             closeConnection(connection);
         }
     }
+
+
+
+    public CreateCustomerResponse createCustomer(
+            CreateCustomerRequest request
+    ) {
+
+        Connection connection = null;
+
+        try {
+
+            connection =
+                    DBConnectionUtil.getConnection();
+
+            Long customerId =
+                    accountRepository.createCustomer(
+
+                            connection,
+                            request.getCustomerName(),
+                            request.getMobile(),
+                            request.getEmail()
+
+                    );
+
+            CreateCustomerResponse response =
+                    new CreateCustomerResponse();
+
+            response.setCustomerId(customerId);
+
+            response.setMessage(
+                    "Customer created successfully"
+            );
+
+            return response;
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    exception.getMessage()
+            );
+
+        } finally {
+
+            closeConnection(connection);
+        }
+
+    }
+
+
+
+
+
+
+    public CreateAccountResponse createAccount(
+            CreateAccountRequest request
+    ) {
+
+        Connection connection = null;
+
+        try {
+
+            connection =
+                    DBConnectionUtil.getConnection();
+
+            String accountNumber =
+                    accountRepository.createAccount(
+
+                            connection,
+                            request.getHolderName(),
+                            request.getEmail(),
+                            request.getAccountType(),
+                            new BigDecimal(
+                                    request.getInitialBalance()
+                            )
+
+                    );
+
+            CreateAccountResponse response =
+                    new CreateAccountResponse();
+
+            response.setAccountNumber(
+                    accountNumber
+            );
+
+            response.setIfscCode(
+                    "SBIN0001234"
+            );
+
+            response.setMessage(
+                    "Account created successfully"
+            );
+
+            return response;
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    exception.getMessage()
+            );
+
+        } finally {
+
+            closeConnection(connection);
+        }
+
+    }
+
+
+
+
 
     // =========================================
     // COMMON METHODS

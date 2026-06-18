@@ -280,32 +280,13 @@ public class AccountRepository {
                     Types.VARCHAR
             );
 
-
-            callableStatement.registerOutParameter(
-                    4,
-                    Types.INTEGER
-            );
-
-            callableStatement.registerOutParameter(
-                    5,
-                    Types.VARCHAR
-            );
-
-            callableStatement.registerOutParameter(
-                    6,
-                    Types.VARCHAR
-            );
-
             callableStatement.execute();
 
-            Integer transactionId =
-                    callableStatement.getInt(4);
+            Integer transactionId = callableStatement.getInt(4);
 
-            String status =
-                    callableStatement.getString(5);
+            String status = callableStatement.getString(5);
 
-            String message =
-                    callableStatement.getString(6);
+            String message = callableStatement.getString(6);
 
 
             FundTransferResponse response = new FundTransferResponse();
@@ -362,10 +343,7 @@ public class AccountRepository {
     // NO INPUT RETURNS OUTPUT
     // =========================================
 
-    public DailyTransactionReportResponse
-    getDailyTransactionReport(
-            Connection connection
-    ) {
+    public DailyTransactionReportResponse getDailyTransactionReport(Connection connection) {
 
         try (
 
@@ -412,4 +390,123 @@ public class AccountRepository {
             );
         }
     }
+
+
+
+
+
+    public Long createCustomer(
+
+            Connection connection,
+            String customerName,
+            String mobile,
+            String email
+
+    ) {
+
+        try (
+
+                CallableStatement callableStatement =
+                        connection.prepareCall(
+                                "CALL create_customer(?, ?, ?, ?)"
+                        )
+
+        ) {
+
+            callableStatement.setString(
+                    1,
+                    customerName
+            );
+
+            callableStatement.setString(
+                    2,
+                    mobile
+            );
+
+            callableStatement.setString(
+                    3,
+                    email
+            );
+
+            callableStatement.registerOutParameter(
+                    4,
+                    Types.INTEGER
+            );
+
+            callableStatement.execute();
+
+            return Long.valueOf(
+                    callableStatement.getInt(4)
+            );
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    exception.getMessage()
+            );
+        }
+
+    }
+
+
+
+
+    public String createAccount(
+
+            Connection connection,
+            String holderName,
+            String email,
+            String accountType,
+            BigDecimal balance
+
+    ) {
+
+        try (
+
+                CallableStatement callableStatement =
+                        connection.prepareCall(
+                                "CALL create_account(?, ?, ?, ?, ?)"
+                        )
+
+        ) {
+
+            callableStatement.setString(
+                    1,
+                    holderName
+            );
+
+            callableStatement.setString(
+                    2,
+                    email
+            );
+
+            callableStatement.setString(
+                    3,
+                    accountType
+            );
+
+            callableStatement.setBigDecimal(
+                    4,
+                    balance
+            );
+
+            callableStatement.registerOutParameter(
+                    5,
+                    Types.VARCHAR
+            );
+
+            callableStatement.execute();
+
+            return callableStatement.getString(5);
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    exception.getMessage()
+            );
+        }
+
+    }
+
+
 }

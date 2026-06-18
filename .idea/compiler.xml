@@ -7,6 +7,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="openapi-spring" />
       </profile>
       <profile name="Annotation profile for transaction-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -14,15 +15,11 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
         </processorPath>
         <module name="transaction-service" />
         <module name="notification-service" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="openapi-spring" target="17" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">

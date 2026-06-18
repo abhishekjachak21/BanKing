@@ -1,20 +1,23 @@
+
 CREATE TABLE IF NOT EXISTS customers (
 
-                                         customer_id SERIAL PRIMARY KEY,
+    customer_id SERIAL PRIMARY KEY,
 
-                                         mobile VARCHAR(15),
+    customer_name VARCHAR(100),
+
+    mobile VARCHAR(15),
 
     email VARCHAR(100)
 
-    ) @@
+) @@
 
 
 
-    CREATE TABLE IF NOT EXISTS accounts (
+CREATE TABLE IF NOT EXISTS accounts (
 
-                                            id SERIAL,
+    id SERIAL,
 
-                                            account_number VARCHAR(20) PRIMARY KEY,
+    account_number VARCHAR(20) PRIMARY KEY,
 
     holder_name VARCHAR(100),
 
@@ -26,8 +29,7 @@ CREATE TABLE IF NOT EXISTS customers (
 
     account_type VARCHAR(20)
 
-    ) @@
-
+)
 
 
     CREATE TABLE IF NOT EXISTS transactions (
@@ -349,10 +351,118 @@ $$ @@
 
 
 
+
+-- =========================================
+--  Scenario 5
+--  =========================================
+
+CREATE OR REPLACE PROCEDURE create_customer(
+
+    IN p_customer_name VARCHAR(100),
+    IN p_mobile VARCHAR(15),
+    IN p_email VARCHAR(100),
+
+    INOUT p_customer_id INT
+
+)
+
+LANGUAGE plpgsql
+
+AS
+$$
+
+BEGIN
+
+INSERT INTO customers(
+
+    customer_name,
+    mobile,
+    email
+
+)
+
+VALUES(
+
+    p_customer_name,
+    p_mobile,
+    p_email
+
+)
+
+RETURNING customer_id
+INTO p_customer_id;
+
+END;
+
+$$ @@
+
+
+-- =========================================
+--  Scenario 6
+--  =========================================
+
+
+
+CREATE OR REPLACE PROCEDURE create_account(
+
+    IN p_holder_name VARCHAR(100),
+    IN p_email VARCHAR(100),
+    IN p_account_type VARCHAR(20),
+    IN p_balance DECIMAL(10,2),
+
+    INOUT p_account_number VARCHAR(20)
+
+)
+
+LANGUAGE plpgsql
+
+AS
+$$
+
+DECLARE
+
+v_id INT;
+
+BEGIN
+
+SELECT COALESCE(MAX(id),0)+1
+
+INTO v_id
+
+FROM accounts;
+
+p_account_number := 'ACC' || (1000 + v_id);
+
+INSERT INTO accounts(
+
+    account_number,
+    holder_name,
+    email,
+    ifsc_code,
+    balance,
+    account_type
+
+)
+
+VALUES(
+
+    p_account_number,
+    p_holder_name,
+    p_email,
+    'SBIN0001234',
+    p_balance,
+    p_account_type
+
+);
+
+END;
+
+$$ @@
+
 -- =========================================
 -- SAMPLE DATA
 -- =========================================
-
+--
 -- INSERT INTO customers(
 --
 --     mobile,
