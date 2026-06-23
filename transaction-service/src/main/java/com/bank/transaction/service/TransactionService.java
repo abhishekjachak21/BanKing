@@ -6,16 +6,16 @@ import com.bank.transaction.exception.AccountNotFoundException;
 import com.bank.transaction.exception.InsufficientBalanceException;
 import com.bank.transaction.producer.RabbitMQProducer;
 import com.bank.transaction.repository.AccountRepository;
-import com.bank.transaction.util.DBConnectionUtil;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.Connection;
 
+@Transactional
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
@@ -30,83 +30,73 @@ public class TransactionService {
 
     public TransactionResponse deposit(DepositRequest request) {
 
-        Connection connection = null;
-
-        try {
-
-            connection = DBConnectionUtil.getConnection();
-
-            connection.setAutoCommit(false);
-
-            Account account = accountRepository.findByAccountNumber(
-                            connection,
-                            request.getAccountNumber()
-                    );
-
-            if (account == null) {
-
-                throw new AccountNotFoundException(
-                        "Account not found"
+        Account account =
+                accountRepository.findByAccountNumber(
+                        request.getAccountNumber()
                 );
-            }
 
-            BigDecimal updatedBalance =
-                    account.getBalance().add(new BigDecimal(request.getAmount()));
+        if (account == null) {
 
-            accountRepository.updateBalance(
-                    connection,
-                    request.getAccountNumber(),
-                    updatedBalance
+            throw new AccountNotFoundException(
+                    "Account not found"
             );
-
-            if(true){
-                throw new RuntimeException("Testing");
-            }
-
-
-            accountRepository.insertTransaction(
-                    connection,
-                    request.getAccountNumber(),
-                    "DEPOSIT",
-                    new BigDecimal(request.getAmount())
-            );
-
-            connection.commit();
-
-            TransactionResponse response = new TransactionResponse();
-
-            response.setMessage("Amount deposited successfully");
-
-            response.setAccountNumber(request.getAccountNumber());
-
-            response.setUpdatedBalance(
-                    updatedBalance.setScale(2, RoundingMode.HALF_UP).toString()
-            );
-
-            TransactionEvent event = new TransactionEvent(
-                            account.getAccountNumber(),
-                            account.getEmail(),
-                            "DEPOSIT",
-                            new BigDecimal(request.getAmount()),
-                            new BigDecimal(response.getUpdatedBalance())
-                    );
-
-            rabbitMQProducer.sendTransactionEvent(event);
-
-            return response;
-
-        } catch (Exception exception) {
-
-            rollbackConnection(connection);
-
-            throw new RuntimeException(
-                    exception.getMessage()
-            );
-
-        } finally {
-
-            closeConnection(connection);
         }
+
+        BigDecimal updatedBalance =
+                account.getBalance()
+                        .add(new BigDecimal(request.getAmount()));
+
+        accountRepository.updateBalance(
+                request.getAccountNumber(),
+                updatedBalance
+        );
+
+//        if (true) {
+//            throw new RuntimeException("Testing");
+//        }
+
+
+        accountRepository.insertTransaction(
+                request.getAccountNumber(),
+                "DEPOSIT",
+                new BigDecimal(request.getAmount())
+        );
+
+        TransactionResponse response =
+                new TransactionResponse();
+
+        response.setMessage(
+                "Amount deposited successfully"
+        );
+
+        response.setAccountNumber(
+                request.getAccountNumber()
+        );
+
+        response.setUpdatedBalance(
+                updatedBalance
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .toString()
+        );
+
+        TransactionEvent event =
+                new TransactionEvent(
+                        account.getAccountNumber(),
+                        account.getEmail(),
+                        "DEPOSIT",
+                        new BigDecimal(request.getAmount()),
+                        updatedBalance
+                );
+
+        System.out.println(event);
+
+        rabbitMQProducer.sendTransactionEvent(
+                event
+        );
+
+        System.out.println("Message Published Successfully");
+
+        return response;
     }
 
     // =========================================
@@ -115,89 +105,77 @@ public class TransactionService {
 
     public TransactionResponse withdraw(WithdrawRequest request) {
 
-        Connection connection = null;
-
-        try {
-
-            connection = DBConnectionUtil.getConnection();
-
-            connection.setAutoCommit(false);
-
-            Account account =
-                    accountRepository.findByAccountNumber(
-                            connection,
-                            request.getAccountNumber()
-                    );
-
-            if (account == null) {
-
-                throw new AccountNotFoundException(
-                        "Account not found"
+        Account account =
+                accountRepository.findByAccountNumber(
+                        request.getAccountNumber()
                 );
-            }
 
-            if (account.getBalance().compareTo(new BigDecimal(request.getAmount())) < 0) {
+        if (account == null) {
 
-                throw new InsufficientBalanceException(
-                        "Insufficient balance"
-                );
-            }
-
-            BigDecimal updatedBalance =
-                    account.getBalance().subtract(new BigDecimal(request.getAmount()));
-
-            accountRepository.updateBalance(
-                    connection,
-                    request.getAccountNumber(),
-                    updatedBalance
+            throw new AccountNotFoundException(
+                    "Account not found"
             );
-
-            accountRepository.insertTransaction(
-                    connection,
-                    request.getAccountNumber(),
-                    "WITHDRAW",
-                    new BigDecimal(request.getAmount())
-            );
-
-            connection.commit();
-
-
-
-            TransactionResponse response = new TransactionResponse();
-
-            response.setMessage("Amount withdrawn successfully");
-
-            response.setAccountNumber(request.getAccountNumber());
-
-            response.setUpdatedBalance(
-                    updatedBalance.setScale(2, RoundingMode.HALF_UP).toString()
-            );
-
-            TransactionEvent event =
-                    new TransactionEvent(
-                            account.getAccountNumber(),
-                            account.getEmail(),
-                            "WITHDRAW",
-                            new BigDecimal(request.getAmount()),
-                            new BigDecimal(response.getUpdatedBalance())
-                    );
-
-            rabbitMQProducer.sendTransactionEvent(event);
-
-            return response;
-
-        } catch (Exception exception) {
-
-            rollbackConnection(connection);
-
-            throw new RuntimeException(
-                    exception.getMessage()
-            );
-
-        } finally {
-
-            closeConnection(connection);
         }
+
+        if (account.getBalance().compareTo(
+                new BigDecimal(request.getAmount())
+        ) < 0) {
+
+            throw new InsufficientBalanceException(
+                    "Insufficient balance"
+            );
+        }
+
+        BigDecimal updatedBalance =
+                account.getBalance()
+                        .subtract(
+                                new BigDecimal(
+                                        request.getAmount()
+                                )
+                        );
+
+        accountRepository.updateBalance(
+                request.getAccountNumber(),
+                updatedBalance
+        );
+
+        accountRepository.insertTransaction(
+                request.getAccountNumber(),
+                "WITHDRAW",
+                new BigDecimal(request.getAmount())
+        );
+
+        TransactionResponse response =
+                new TransactionResponse();
+
+        response.setMessage(
+                "Amount withdrawn successfully"
+        );
+
+        response.setAccountNumber(
+                request.getAccountNumber()
+        );
+
+        response.setUpdatedBalance(
+                updatedBalance
+                        .setScale(2, RoundingMode.HALF_UP)
+                        .toString()
+        );
+
+        TransactionEvent event =
+                new TransactionEvent(
+                        account.getAccountNumber(),
+                        account.getEmail(),
+                        "WITHDRAW",
+                        new BigDecimal(request.getAmount()),
+                        updatedBalance
+                );
+
+        rabbitMQProducer.sendTransactionEvent(
+                event
+        );
+
+        return response;
     }
 
     // =========================================
@@ -207,34 +185,20 @@ public class TransactionService {
 
     public String updateCustomerKyc(UpdateKycRequest request) {
 
-        Connection connection = null;
+        accountRepository.updateCustomerKyc(
 
-        try {
+                Math.toIntExact(
+                        request.getCustomerId()
+                ),
 
-            connection =
-                    DBConnectionUtil.getConnection();
+                request.getMobile(),
 
-            accountRepository.updateCustomerKyc(
-                    connection,
-                    Math.toIntExact(
-                            request.getCustomerId()
-                    ),
-                    request.getMobile(),
-                    request.getEmail()
-            );
+                request.getEmail()
 
-            return "KYC Updated Successfully";
+        );
 
-        } catch (Exception exception) {
+        return "KYC Updated Successfully";
 
-            throw new RuntimeException(
-                    exception.getMessage()
-            );
-
-        } finally {
-
-            closeConnection(connection);
-        }
     }
 
     // =========================================
@@ -244,29 +208,18 @@ public class TransactionService {
 
     public FundTransferResponse fundTransfer(FundTransferRequest request) {
 
-        Connection connection = null;
+        return accountRepository.fundTransfer(
 
-        try {
+                request.getFromAccount(),
 
-            connection = DBConnectionUtil.getConnection();
+                request.getToAccount(),
 
-            return accountRepository.fundTransfer(
-                    connection,
-                    request.getFromAccount(),
-                    request.getToAccount(),
-                    new BigDecimal(request.getAmount())
-            );
+                new BigDecimal(
+                        request.getAmount()
+                )
 
-        } catch (Exception exception) {
+        );
 
-            throw new RuntimeException(
-                    exception.getMessage()
-            );
-
-        } finally {
-
-            closeConnection(connection);
-        }
     }
 
     // =========================================
@@ -276,28 +229,10 @@ public class TransactionService {
 
     public String processDailyInterest() {
 
-        Connection connection = null;
+        accountRepository.processDailyInterest();
 
-        try {
+        return "Daily interest processed successfully";
 
-            connection = DBConnectionUtil.getConnection();
-
-            accountRepository.processDailyInterest(
-                    connection
-            );
-
-            return "Daily interest processed successfully";
-
-        } catch (Exception exception) {
-
-            throw new RuntimeException(
-                    exception.getMessage()
-            );
-
-        } finally {
-
-            closeConnection(connection);
-        }
     }
 
     // =========================================
@@ -305,174 +240,145 @@ public class TransactionService {
     // NO INPUT RETURNS OUTPUT
     // =========================================
 
-    public DailyTransactionReportResponse
-    getDailyTransactionReport() {
+    public DailyTransactionReportResponse getDailyTransactionReport() {
 
-        Connection connection = null;
+        return accountRepository
+                .getDailyTransactionReport();
 
-        try {
-
-            connection =
-                    DBConnectionUtil.getConnection();
-
-            return accountRepository
-                    .getDailyTransactionReport(
-                            connection
-                    );
-
-        } catch (Exception exception) {
-
-            throw new RuntimeException(
-                    exception.getMessage()
-            );
-
-        } finally {
-
-            closeConnection(connection);
-        }
     }
 
+//    =========================================
 
 
 
     public CreateCustomerResponse createCustomer(CreateCustomerRequest request) {
 
-        Connection connection = null;
 
-        try {
-
-            connection =
-                    DBConnectionUtil.getConnection();
-
-            Long customerId =
-                    accountRepository.createCustomer(
-
-                            connection,
-                            request.getCustomerName(),
-                            request.getMobile(),
-                            request.getEmail()
-
-                    );
-
-            CreateCustomerResponse response =
-                    new CreateCustomerResponse();
-
-            response.setCustomerId(customerId);
-
-            response.setMessage(
-                    "Customer created successfully"
-            );
-
-            return response;
-
-        } catch (Exception exception) {
+        if (accountRepository.existsByEmail(
+                request.getEmail()
+        )) {
 
             throw new RuntimeException(
-                    exception.getMessage()
+                    "Email already exists"
             );
 
-        } finally {
-
-            closeConnection(connection);
         }
 
+        if (accountRepository.existsByMobile(
+                request.getMobile()
+        )) {
+
+            throw new RuntimeException(
+                    "Mobile number already exists"
+            );
+
+        }
+
+        if (accountRepository.existsByPanNumber(
+                request.getPanNumber()
+        )) {
+
+            throw new RuntimeException(
+                    "PAN number already exists"
+            );
+
+        }
+
+        Integer customerId =
+                accountRepository.createCustomer(
+
+                        request.getCustomerName(),
+
+                        request.getMobile(),
+
+                        request.getEmail(),
+
+                        request.getPanNumber()
+
+                );
+
+        CreateCustomerResponse response =
+                new CreateCustomerResponse();
+
+        response.setCustomerId(
+                customerId
+        );
+
+        response.setMessage(
+                "Customer created successfully"
+        );
+
+        return response;
+
     }
-
-
-
 
 
 
     public CreateAccountResponse createAccount(CreateAccountRequest request) {
 
-        Connection connection = null;
-
-        try {
-
-            connection =
-                    DBConnectionUtil.getConnection();
-
-            String accountNumber =
-                    accountRepository.createAccount(
-
-                            connection,
-                            request.getHolderName(),
-                            request.getEmail(),
-                            request.getAccountType(),
-                            new BigDecimal(
-                                    request.getInitialBalance()
-                            )
-
-                    );
-
-            CreateAccountResponse response = new CreateAccountResponse();
-
-            response.setAccountNumber(
-                    accountNumber
-            );
-
-            response.setIfscCode(
-                    "SBIN0001234"
-            );
-
-            response.setMessage(
-                    "Account created successfully"
-            );
-
-            return response;
-
-        } catch (Exception exception) {
+        if (!accountRepository.customerExists(
+                request.getCustomerId()
+        )) {
 
             throw new RuntimeException(
-                    exception.getMessage()
+                    "Customer does not exist"
             );
 
-        } finally {
-
-            closeConnection(connection);
         }
+
+        if (accountRepository.existsByCustomerId(
+                request.getCustomerId()
+        )) {
+
+            throw new RuntimeException(
+                    "Customer already has an account"
+            );
+
+        }
+
+        BigDecimal initialBalance = new BigDecimal(request.getInitialBalance());
+
+        if (initialBalance.compareTo(
+                BigDecimal.valueOf(3000)
+        ) < 0) {
+
+            throw new RuntimeException(
+                    "Minimum balance should be 3000"
+            );
+
+        }
+
+
+        String accountNumber =
+                accountRepository.createAccount(
+
+                        request.getCustomerId(),
+
+                        request.getAccountType(),
+
+                        new BigDecimal(
+                                request.getInitialBalance()
+                        )
+
+                );
+
+        CreateAccountResponse response =
+                new CreateAccountResponse();
+
+        response.setAccountNumber(
+                accountNumber
+        );
+
+        response.setIfscCode(
+                "SBIN0001234"
+        );
+
+        response.setMessage(
+                "Account created successfully"
+        );
+
+        return response;
 
     }
 
-
-
-
-
-    // =========================================
-    // COMMON METHODS
-    // =========================================
-
-    private void rollbackConnection(
-            Connection connection
-    ) {
-
-        try {
-
-            if (connection != null) {
-
-                connection.rollback();
-            }
-
-        } catch (Exception exception) {
-
-            exception.printStackTrace();
-        }
-    }
-
-    private void closeConnection(
-            Connection connection
-    ) {
-
-        try {
-
-            if (connection != null) {
-
-                connection.close();
-            }
-
-        } catch (Exception exception) {
-
-            exception.printStackTrace();
-        }
-    }
 }

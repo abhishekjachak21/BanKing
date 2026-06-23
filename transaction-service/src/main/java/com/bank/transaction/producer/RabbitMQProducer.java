@@ -22,5 +22,8 @@ public class RabbitMQProducer {
                 RabbitMQConfig.ROUTING_KEY,
                 event
         );
+
+        System.out.println("Sent to RabbitMQ");
+
     }
 }

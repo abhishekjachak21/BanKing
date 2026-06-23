@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS customers (
 
     mobile VARCHAR(15),
 
-    email VARCHAR(100)
+    email VARCHAR(100),
+
+    pan_number VARCHAR(20)
 
 ) @@
 
@@ -18,6 +20,8 @@ CREATE TABLE IF NOT EXISTS accounts (
     id SERIAL,
 
     account_number VARCHAR(20) PRIMARY KEY,
+
+    customer_id INT REFERENCES customers(customer_id),
 
     holder_name VARCHAR(100),
 
@@ -32,11 +36,11 @@ CREATE TABLE IF NOT EXISTS accounts (
 )@@
 
 
-    CREATE TABLE IF NOT EXISTS transactions (
+CREATE TABLE IF NOT EXISTS transactions (
 
-                                                id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
 
-                                                account_number VARCHAR(20),
+    account_number VARCHAR(20),
 
     transaction_type VARCHAR(20),
 
@@ -55,7 +59,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 
     CREATE OR REPLACE FUNCTION find_account(
 
-                                               p_account_number VARCHAR(20)
+                           p_account_number VARCHAR(20)
 
     )
 
@@ -356,20 +360,25 @@ $$ @@
 --  Scenario 5
 --  =========================================
 
-CREATE OR REPLACE PROCEDURE create_customer(
+CREATE OR REPLACE FUNCTION create_customer(
 
-    IN p_customer_name VARCHAR(100),
-    IN p_mobile VARCHAR(15),
-    IN p_email VARCHAR(100),
-
-    INOUT p_customer_id INT
+    p_customer_name VARCHAR(100),
+    p_mobile VARCHAR(15),
+    p_email VARCHAR(100),
+    p_pan_number VARCHAR(20)
 
 )
+
+RETURNS INT
 
 LANGUAGE plpgsql
 
 AS
 $$
+
+DECLARE
+
+v_customer_id INT;
 
 BEGIN
 
@@ -377,7 +386,8 @@ INSERT INTO customers(
 
     customer_name,
     mobile,
-    email
+    email,
+    pan_number
 
 )
 
@@ -385,17 +395,19 @@ VALUES(
 
     p_customer_name,
     p_mobile,
-    p_email
+    p_email,
+    p_pan_number
 
 )
 
 RETURNING customer_id
-INTO p_customer_id;
+INTO v_customer_id;
+
+RETURN v_customer_id;
 
 END;
 
 $$ @@
-
 
 -- =========================================
 --  Scenario 6
@@ -403,16 +415,15 @@ $$ @@
 
 
 
-CREATE OR REPLACE PROCEDURE create_account(
+CREATE OR REPLACE FUNCTION create_account(
 
-    IN p_holder_name VARCHAR(100),
-    IN p_email VARCHAR(100),
-    IN p_account_type VARCHAR(20),
-    IN p_balance DECIMAL(10,2),
-
-    INOUT p_account_number VARCHAR(20)
+    p_customer_id INT,
+    p_account_type VARCHAR(20),
+    p_balance DECIMAL(10,2)
 
 )
+
+RETURNS VARCHAR
 
 LANGUAGE plpgsql
 
@@ -422,20 +433,33 @@ $$
 DECLARE
 
 v_id INT;
+v_holder_name VARCHAR(100);
+v_email VARCHAR(100);
+v_account_number VARCHAR(20);
 
 BEGIN
 
+SELECT customer_name,
+       email
+INTO v_holder_name,
+     v_email
+FROM customers
+WHERE customer_id = p_customer_id;
+
+IF NOT FOUND THEN
+    RAISE EXCEPTION 'Customer not found';
+END IF;
+
 SELECT COALESCE(MAX(id),0)+1
-
 INTO v_id
-
 FROM accounts;
 
-p_account_number := 'ACC' || (1000 + v_id);
+v_account_number := 'ACC' || (1000 + v_id);
 
 INSERT INTO accounts(
 
     account_number,
+    customer_id,
     holder_name,
     email,
     ifsc_code,
@@ -446,14 +470,17 @@ INSERT INTO accounts(
 
 VALUES(
 
-    p_account_number,
-    p_holder_name,
-    p_email,
+    v_account_number,
+    p_customer_id,
+    v_holder_name,
+    v_email,
     'SBIN0001234',
     p_balance,
     p_account_type
 
 );
+
+RETURN v_account_number;
 
 END;
 

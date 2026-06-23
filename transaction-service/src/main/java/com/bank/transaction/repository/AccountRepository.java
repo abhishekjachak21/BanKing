@@ -1,95 +1,83 @@
 package com.bank.transaction.repository;
 
-import com.bank.transaction.entity.Account;
-import com.bank.transaction.dto.FundTransferResponse;
 import com.bank.transaction.dto.DailyTransactionReportResponse;
+import com.bank.transaction.dto.FundTransferResponse;
+import com.bank.transaction.entity.Account;
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.SqlOutParameter;
+import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Types;
+import java.util.HashMap;
+import java.util.Map;
 
 @Repository
+@RequiredArgsConstructor
 public class AccountRepository {
+
+    private final JdbcTemplate jdbcTemplate;
 
     // =========================================
     // FIND ACCOUNT
     // =========================================
 
+    public Account findByAccountNumber(String accountNumber) {
 
-    public Account findByAccountNumber(
-            Connection connection,
-            String accountNumber
-    ) {
+        try {
 
-        try (
+            return jdbcTemplate.query(
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "SELECT * FROM find_account(?)"
-                        )
+                    "SELECT * FROM find_account(?)",
 
-        ) {
+                    new Object[]{accountNumber},
 
-            callableStatement.setString(
-                    1,
-                    accountNumber
-            );
+                    (rs, rowNum) -> {
 
-            ResultSet resultSet = callableStatement.executeQuery();
+                        Account account = new Account();
 
-            if (resultSet.next()) {
+                        account.setId(
+                                rs.getLong("id")
+                        );
 
-                Account account = new Account();
+                        account.setAccountNumber(
+                                rs.getString("account_number")
+                        );
 
-                account.setId(
-                        resultSet.getLong("id")
-                );
+                        account.setHolderName(
+                                rs.getString("holder_name")
+                        );
 
-                account.setAccountNumber(
-                        resultSet.getString(
-                                "account_number"
-                        )
-                );
+                        account.setEmail(
+                                rs.getString("email")
+                        );
 
-                account.setHolderName(
-                        resultSet.getString(
-                                "holder_name"
-                        )
-                );
+                        account.setIfscCode(
+                                rs.getString("ifsc_code")
+                        );
 
-                account.setEmail(
-                        resultSet.getString(
-                                "email"
-                        )
-                );
+                        account.setBalance(
+                                rs.getBigDecimal("balance")
+                        );
 
-                account.setIfscCode(
-                        resultSet.getString(
-                                "ifsc_code"
-                        )
-                );
+                        return account;
 
-                account.setBalance(
-                        resultSet.getBigDecimal(
-                                "balance"
-                        )
-                );
+                    }
 
-                return account;
-            }
+            ).stream().findFirst().orElse(null);
 
-        } catch (Exception exception) {
+        }
+
+        catch (Exception exception) {
 
             throw new RuntimeException(
                     exception.getMessage()
             );
         }
-
-        return null;
     }
 
     // =========================================
@@ -97,33 +85,24 @@ public class AccountRepository {
     // =========================================
 
     public void updateBalance(
-            Connection connection,
             String accountNumber,
             BigDecimal updatedBalance
     ) {
 
-        try (
+        try {
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "CALL update_balance(?, ?)"
-                        )
+            jdbcTemplate.update(
 
-        ) {
+                    "CALL update_balance(?, ?)",
 
-            callableStatement.setString(
-                    1,
-                    accountNumber
-            );
-
-            callableStatement.setBigDecimal(
-                    2,
+                    accountNumber,
                     updatedBalance
+
             );
 
-            callableStatement.execute();
+        }
 
-        } catch (Exception exception) {
+        catch (Exception exception) {
 
             throw new RuntimeException(
                     exception.getMessage()
@@ -136,39 +115,28 @@ public class AccountRepository {
     // =========================================
 
     public void insertTransaction(
-            Connection connection,
+
             String accountNumber,
             String transactionType,
             BigDecimal amount
+
     ) {
 
-        try (
+        try {
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "CALL insert_transaction(?, ?, ?)"
-                        )
+            jdbcTemplate.update(
 
-        ) {
+                    "CALL insert_transaction(?, ?, ?)",
 
-            callableStatement.setString(
-                    1,
-                    accountNumber
-            );
-
-            callableStatement.setString(
-                    2,
-                    transactionType
-            );
-
-            callableStatement.setBigDecimal(
-                    3,
+                    accountNumber,
+                    transactionType,
                     amount
+
             );
 
-            callableStatement.execute();
+        }
 
-        } catch (Exception exception) {
+        catch (Exception exception) {
 
             throw new RuntimeException(
                     exception.getMessage()
@@ -183,40 +151,27 @@ public class AccountRepository {
 
     public void updateCustomerKyc(
 
-            Connection connection,
             Integer customerId,
             String mobile,
             String email
 
     ) {
 
-        try (
+        try {
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "CALL update_customer_kyc(?, ?, ?)"
-                        )
+            jdbcTemplate.update(
 
-        ) {
+                    "CALL update_customer_kyc(?, ?, ?)",
 
-            callableStatement.setInt(
-                    1,
-                    customerId
-            );
-
-            callableStatement.setString(
-                    2,
-                    mobile
-            );
-
-            callableStatement.setString(
-                    3,
+                    customerId,
+                    mobile,
                     email
+
             );
 
-            callableStatement.execute();
+        }
 
-        } catch (Exception exception) {
+        catch (Exception exception) {
 
             throw new RuntimeException(
                     exception.getMessage()
@@ -229,107 +184,138 @@ public class AccountRepository {
     // TAKES INPUT RETURNS OUTPUT
     // =========================================
 
-
-
     public FundTransferResponse fundTransfer(
 
-            Connection connection,
             String fromAccount,
             String toAccount,
             BigDecimal amount
 
     ) {
 
-        try (
+        try {
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "CALL fund_transfer(?, ?, ?, ?, ?, ?)"
-                        )
+            SimpleJdbcCall jdbcCall =
+                    new SimpleJdbcCall(jdbcTemplate)
 
-        ) {
+                            .withProcedureName(
+                                    "fund_transfer"
+                            )
 
-            callableStatement.setString(
-                    1,
+                            .declareParameters(
+
+                                    new SqlParameter(
+                                            "p_from_account",
+                                            Types.VARCHAR
+                                    ),
+
+                                    new SqlParameter(
+                                            "p_to_account",
+                                            Types.VARCHAR
+                                    ),
+
+                                    new SqlParameter(
+                                            "p_amount",
+                                            Types.NUMERIC
+                                    ),
+
+                                    new SqlOutParameter(
+                                            "p_transaction_id",
+                                            Types.INTEGER
+                                    ),
+
+                                    new SqlOutParameter(
+                                            "p_status",
+                                            Types.VARCHAR
+                                    ),
+
+                                    new SqlOutParameter(
+                                            "p_message",
+                                            Types.VARCHAR
+                                    )
+
+                            );
+
+            Map<String, Object> inParams =
+                    new HashMap<>();
+
+            inParams.put(
+                    "p_from_account",
                     fromAccount
             );
 
-            callableStatement.setString(
-                    2,
+            inParams.put(
+                    "p_to_account",
                     toAccount
             );
 
-            callableStatement.setBigDecimal(
-                    3,
+            inParams.put(
+                    "p_amount",
                     amount
             );
 
-            callableStatement.registerOutParameter(
-                    4,
-                    Types.INTEGER
+            Map<String, Object> result =
+                    jdbcCall.execute(
+                            inParams
+                    );
+
+            FundTransferResponse response =
+                    new FundTransferResponse();
+
+            response.setTransactionId(
+
+                    ((Number) result.get(
+                            "p_transaction_id"
+                    )).longValue()
+
             );
 
-            callableStatement.registerOutParameter(
-                    5,
-                    Types.VARCHAR
+            response.setStatus(
+
+                    (String) result.get(
+                            "p_status"
+                    )
+
             );
 
-            callableStatement.registerOutParameter(
-                    6,
-                    Types.VARCHAR
+            response.setMessage(
+
+                    (String) result.get(
+                            "p_message"
+                    )
+
             );
-
-            callableStatement.execute();
-
-            Integer transactionId = callableStatement.getInt(4);
-
-            String status = callableStatement.getString(5);
-
-            String message = callableStatement.getString(6);
-
-
-            FundTransferResponse response = new FundTransferResponse();
-
-            response.setTransactionId(Long.valueOf(transactionId));
-
-            response.setStatus(status);
-
-            response.setMessage(message);
 
             return response;
 
+        }
 
-        } catch (Exception exception) {
+        catch (Exception exception) {
 
             throw new RuntimeException(
                     exception.getMessage()
             );
         }
+
     }
-
-
 
     // =========================================
     // SCENARIO 3
     // NO INPUT RETURNS NOTHING
     // =========================================
 
-    public void processDailyInterest(
-            Connection connection
-    ) {
+    public void processDailyInterest() {
 
-        try (
+        try {
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "CALL process_daily_interest()"
-                        )
+            jdbcTemplate.update(
 
-        ) {
+                    "CALL process_daily_interest()"
 
-            callableStatement.execute();
+            );
 
-        } catch (Exception exception) {
+        }
+
+        catch (Exception exception) {
 
             throw new RuntimeException(
                     exception.getMessage()
@@ -342,47 +328,68 @@ public class AccountRepository {
     // NO INPUT RETURNS OUTPUT
     // =========================================
 
-    public DailyTransactionReportResponse getDailyTransactionReport(Connection connection) {
+    public DailyTransactionReportResponse
+    getDailyTransactionReport() {
 
-        try (
+        try {
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "CALL get_daily_transaction_report(?, ?)"
-                        )
+            SimpleJdbcCall jdbcCall =
+                    new SimpleJdbcCall(
+                            jdbcTemplate
+                    )
 
-        ) {
+                            .withProcedureName(
+                                    "get_daily_transaction_report"
+                            )
 
-            callableStatement.registerOutParameter(
-                    1,
-                    Types.INTEGER
-            );
+                            .declareParameters(
 
-            callableStatement.registerOutParameter(
-                    2,
-                    Types.NUMERIC
-            );
+                                    new SqlOutParameter(
+                                            "p_total_transactions",
+                                            Types.INTEGER
+                                    ),
 
-            callableStatement.execute();
+                                    new SqlOutParameter(
+                                            "p_total_amount",
+                                            Types.NUMERIC
+                                    )
 
-            Integer totalTransactions =
-                    callableStatement.getInt(1);
+                            );
 
-            BigDecimal totalAmount =
-                    callableStatement.getBigDecimal(2);
+            Map<String, Object> result =
+                    jdbcCall.execute();
 
             DailyTransactionReportResponse response =
                     new DailyTransactionReportResponse();
 
-            response.setTotalTransactions(totalTransactions);
+            response.setTotalTransactions(
+
+                    (Integer) result.get(
+                            "p_total_transactions"
+                    )
+
+            );
 
             response.setTotalDepositAmount(
-                    totalAmount.setScale(2, RoundingMode.HALF_UP).toString()
+
+                    ((BigDecimal) result.get(
+                            "p_total_amount"
+                    ))
+
+                            .setScale(
+                                    2,
+                                    RoundingMode.HALF_UP
+                            )
+
+                            .toString()
+
             );
 
             return response;
 
-        } catch (Exception exception) {
+        }
+
+        catch (Exception exception) {
 
             throw new RuntimeException(
                     exception.getMessage()
@@ -390,122 +397,143 @@ public class AccountRepository {
         }
     }
 
+    // =========================================
+    // CREATE CUSTOMER
+    // =========================================
 
 
+    public Integer createCustomer(
 
-
-    public Long createCustomer(
-
-            Connection connection,
             String customerName,
             String mobile,
-            String email
+            String email,
+            String panNumber
 
     ) {
 
-        try (
+        return jdbcTemplate.queryForObject(
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "CALL create_customer(?, ?, ?, ?)"
-                        )
+                "SELECT create_customer(?, ?, ?, ?)",
 
-        ) {
+                Integer.class,
 
-            callableStatement.setString(
-                    1,
-                    customerName
-            );
+                customerName,
+                mobile,
+                email,
+                panNumber
 
-            callableStatement.setString(
-                    2,
-                    mobile
-            );
-
-            callableStatement.setString(
-                    3,
-                    email
-            );
-
-            callableStatement.registerOutParameter(
-                    4,
-                    Types.INTEGER
-            );
-
-            callableStatement.execute();
-
-            return Long.valueOf(
-                    callableStatement.getInt(4)
-            );
-
-        } catch (Exception exception) {
-
-            throw new RuntimeException(
-                    exception.getMessage()
-            );
-        }
+        );
 
     }
 
-
-
+    // =========================================
+    // CREATE ACCOUNT
+    // =========================================
 
     public String createAccount(
-
-            Connection connection,
-            String holderName,
-            String email,
+            Integer customerId,
             String accountType,
             BigDecimal balance
-
     ) {
 
-        try (
+        return jdbcTemplate.queryForObject(
 
-                CallableStatement callableStatement =
-                        connection.prepareCall(
-                                "CALL create_account(?, ?, ?, ?, ?)"
-                        )
+                "SELECT create_account(?, ?, ?)",
 
-        ) {
+                String.class,
 
-            callableStatement.setString(
-                    1,
-                    holderName
-            );
+                customerId,
+                accountType,
+                balance
 
-            callableStatement.setString(
-                    2,
-                    email
-            );
-
-            callableStatement.setString(
-                    3,
-                    accountType
-            );
-
-            callableStatement.setBigDecimal(
-                    4,
-                    balance
-            );
-
-            callableStatement.registerOutParameter(
-                    5,
-                    Types.VARCHAR
-            );
-
-            callableStatement.execute();
-
-            return callableStatement.getString(5);
-
-        } catch (Exception exception) {
-
-            throw new RuntimeException(
-                    exception.getMessage()
-            );
-        }
+        );
 
     }
 
+
+    //COMMON Small methods
+
+    public boolean existsByEmail(String email) {
+
+        Integer count = jdbcTemplate.queryForObject(
+
+                "SELECT COUNT(*) FROM customers WHERE email = ?",
+
+                Integer.class,
+
+                email
+
+        );
+
+        return count != null && count > 0;
+
+    }
+
+
+    public boolean existsByMobile(String mobile) {
+
+        Integer count = jdbcTemplate.queryForObject(
+
+                "SELECT COUNT(*) FROM customers WHERE mobile = ?",
+
+                Integer.class,
+
+                mobile
+
+        );
+
+        return count != null && count > 0;
+
+    }
+
+
+    public boolean existsByPanNumber(String panNumber) {
+
+        Integer count = jdbcTemplate.queryForObject(
+
+                "SELECT COUNT(*) FROM customers WHERE pan_number = ?",
+
+                Integer.class,
+
+                panNumber
+
+        );
+
+        return count != null && count > 0;
+
+    }
+
+    public boolean existsByCustomerId(Integer customerId) {
+
+        Integer count = jdbcTemplate.queryForObject(
+
+                "SELECT COUNT(*) FROM accounts WHERE customer_id = ?",
+
+                Integer.class,
+
+                customerId
+
+        );
+
+        return count != null && count > 0;
+
+    }
+
+
+    public boolean customerExists(Integer customerId) {
+
+        Integer count = jdbcTemplate.queryForObject(
+
+                "SELECT COUNT(*) FROM customers WHERE customer_id = ?",
+
+                Integer.class,
+
+                customerId
+
+        );
+
+        return count != null && count > 0;
+
+    }
 
 }

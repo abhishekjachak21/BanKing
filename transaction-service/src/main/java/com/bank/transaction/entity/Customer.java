@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class Customer {
 
-    private Long customerId;
+    private Integer customerId;
     private String customerName;
     private String mobile;
     private String email;
