@@ -334,9 +334,8 @@ public class TransactionService {
 
 
 
-    public CreateCustomerResponse createCustomer(
-            CreateCustomerRequest request
-    ) {
+
+    public CreateCustomerResponse createCustomer(CreateCustomerRequest request) {
 
         Connection connection = null;
 
@@ -384,9 +383,7 @@ public class TransactionService {
 
 
 
-    public CreateAccountResponse createAccount(
-            CreateAccountRequest request
-    ) {
+    public CreateAccountResponse createAccount(CreateAccountRequest request) {
 
         Connection connection = null;
 
@@ -408,8 +405,7 @@ public class TransactionService {
 
                     );
 
-            CreateAccountResponse response =
-                    new CreateAccountResponse();
+            CreateAccountResponse response = new CreateAccountResponse();
 
             response.setAccountNumber(
                     accountNumber

@@ -421,6 +421,8 @@ components:
           type: string
           example: Account created successfully
 
+
+
     UpdateKycRequest:
 
       type: object

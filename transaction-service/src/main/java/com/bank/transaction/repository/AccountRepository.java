@@ -39,8 +39,7 @@ public class AccountRepository {
                     accountNumber
             );
 
-            ResultSet resultSet =
-                    callableStatement.executeQuery();
+            ResultSet resultSet = callableStatement.executeQuery();
 
             if (resultSet.next()) {
 
