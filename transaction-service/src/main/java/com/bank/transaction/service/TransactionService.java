@@ -297,16 +297,12 @@ public class TransactionService {
 
                 );
 
-        CreateCustomerResponse response =
-                new CreateCustomerResponse();
 
-        response.setCustomerId(
-                customerId
-        );
+        CreateCustomerResponse response = new CreateCustomerResponse();
 
-        response.setMessage(
-                "Customer created successfully"
-        );
+        response.setCustomerId(customerId);
+
+        response.setMessage("Customer created successfully");
 
         return response;
 
@@ -361,6 +357,22 @@ public class TransactionService {
                         )
 
                 );
+
+        AccountCreatedEvent event =
+                accountRepository.getAccountCreatedEventData(
+                        request.getCustomerId(),
+                        accountNumber
+                );
+
+        event.setInitialBalance(
+                new BigDecimal(
+                        request.getInitialBalance()
+                )
+        );
+
+        rabbitMQProducer.sendAccountCreatedEvent(
+                event
+        );
 
         CreateAccountResponse response =
                 new CreateAccountResponse();

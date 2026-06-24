@@ -1,5 +1,6 @@
 package com.bank.transaction.repository;
 
+import com.bank.transaction.dto.AccountCreatedEvent;
 import com.bank.transaction.dto.DailyTransactionReportResponse;
 import com.bank.transaction.dto.FundTransferResponse;
 import com.bank.transaction.entity.Account;
@@ -450,6 +451,38 @@ public class AccountRepository {
 
     }
 
+
+    public AccountCreatedEvent getAccountCreatedEventData(
+            Integer customerId,
+            String accountNumber
+    ) {
+
+        String sql = """
+        SELECT
+            c.customer_name,
+            c.email,
+            a.account_type
+        FROM customers c
+        JOIN accounts a
+            ON c.customer_id = a.customer_id
+        WHERE c.customer_id = ?
+        AND a.account_number = ?
+        """;
+
+        return jdbcTemplate.queryForObject(
+                sql,
+                (rs, rowNum) -> new AccountCreatedEvent(
+                        rs.getString("customer_name"),
+                        rs.getString("email"),
+                        accountNumber,
+                        rs.getString("account_type"),
+                        "SBIN0001234",
+                        null
+                ),
+                customerId,
+                accountNumber
+        );
+    }
 
     //COMMON Small methods
 

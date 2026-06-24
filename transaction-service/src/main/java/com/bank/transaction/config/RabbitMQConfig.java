@@ -30,6 +30,9 @@ public class RabbitMQConfig {
 
     public static final String RESPONSE_ROUTING_KEY = "notification.response.routingKey";
 
+    public static final String ACCOUNT_QUEUE = "account.created.queue";
+
+    public static final String ACCOUNT_ROUTING_KEY = "account.created.routingKey";
 
     @Bean
     public Queue responseQueue() {
@@ -53,6 +56,24 @@ public class RabbitMQConfig {
                 )
                 .build();
     }
+
+    @Bean
+    public Queue accountQueue() {
+
+        return QueueBuilder
+                .durable(ACCOUNT_QUEUE)
+                .build();
+    }
+
+    @Bean
+    public Binding accountBinding() {
+
+        return BindingBuilder
+                .bind(accountQueue())
+                .to(exchange())
+                .with(ACCOUNT_ROUTING_KEY);
+    }
+
 
     @Bean
     public Queue dailyInterestQueue() {

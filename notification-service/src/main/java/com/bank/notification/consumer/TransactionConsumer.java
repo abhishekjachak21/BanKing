@@ -109,4 +109,6 @@ public class TransactionConsumer {
                 event.getEmail()
         );
     }
+
+
 }
